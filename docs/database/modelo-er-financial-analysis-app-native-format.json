@@ -1,0 +1,442 @@
+{
+  "tables": [
+    {
+      "name": "user",
+      "comment": "",
+      "color": "#177a32",
+      "fields": [
+        {
+          "id": "lZ-o3K5omUD1OL7lfQsBf",
+          "name": "id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "n1SbaGM9aasT5EKFDhb9n",
+          "name": "username",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": true,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "wuaDQ-dSkDtEBgv8zkozo",
+          "name": "email",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": true,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "pYjtCug6uNjcWr3l3auaU",
+          "name": "password_hash",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "3ak5Ra7kuH-f6SHvs995B",
+          "name": "created_at",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "size": 65535
+        }
+      ],
+      "indices": [],
+      "uniqueConstraints": [],
+      "id": "WLa92gNXK9il_UY_Wdh8U",
+      "x": 660,
+      "y": 0
+    },
+    {
+      "name": "company",
+      "comment": "",
+      "color": "#177a32",
+      "fields": [
+        {
+          "id": "mcR_MANrUF48ZNrgo4ER2",
+          "name": "id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "ZudmWxi5e_O-j0jVuLKj7",
+          "name": "name",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "zS2JSKd2pChdLWSvib3A8",
+          "name": "sector",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "PgdNk9gtxlkQdNzYCGD4G",
+          "name": "currency",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        }
+      ],
+      "indices": [],
+      "uniqueConstraints": [],
+      "id": "By6iXi9bzB6eMOCqP5e2e",
+      "x": -86.8421373869244,
+      "y": 292.6842105263158
+    },
+    {
+      "name": "financial_record",
+      "comment": "",
+      "color": "#177a32",
+      "fields": [
+        {
+          "id": "q5rX5DfriEo9GpHY2mBj4",
+          "name": "id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "17ev1nHotxGclB9yjRLbv",
+          "name": "company_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "e6XAAqywcV6aL1s1a_3G2",
+          "name": "fiscal_year",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "dW32y9fWM_WccvRodeF1o",
+          "name": "revenue",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "n-mFAqBf-waAMA-5xwgvz",
+          "name": "operating_income",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "8ymeryzgBVocDTMQXYjgV",
+          "name": "net_income",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "T8v1FICb2dAF5B5VaC-Om",
+          "name": "total_assets",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "fz2I12UuaAv9Rb6Fsxum5",
+          "name": "total_liabilities",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "IotS4s43uGGQygt1hlkFG",
+          "name": "equity",
+          "type": "REAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        }
+      ],
+      "indices": [],
+      "uniqueConstraints": [
+        {
+          "id": 0,
+          "name": "financial_record_unique_0",
+          "fields": [
+            "company_id",
+            "fiscal_year"
+          ]
+        }
+      ],
+      "id": "hKQuY58MeVfY1TbIHwtV3",
+      "x": 276.2105520148028,
+      "y": 281.02633506373365
+    },
+    {
+      "name": "saved_comparison",
+      "comment": "",
+      "color": "#177a32",
+      "fields": [
+        {
+          "id": "tH6elKrN_QD_RjR63i2g2",
+          "name": "id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "w2h48V_HHolM3BTadWIVi",
+          "name": "user_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "LA3zhhy6SpO1FLZ7lHmn3",
+          "name": "name",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "m1wBs2lQjuDO8icuQKCiA",
+          "name": "created_at",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "size": 65535
+        }
+      ],
+      "indices": [],
+      "uniqueConstraints": [],
+      "id": "1xglUd8VztVucCuBLOBU_",
+      "x": 330,
+      "y": 18.5
+    },
+    {
+      "name": "comparison_company",
+      "comment": "",
+      "color": "#177a32",
+      "fields": [
+        {
+          "id": "vQzYuy15RPB1PO5o3_9ge",
+          "name": "comparison_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        },
+        {
+          "id": "e3kSI5t3Ydj2nTB_yoGTo",
+          "name": "company_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": true,
+          "default": "",
+          "check": ""
+        }
+      ],
+      "indices": [],
+      "uniqueConstraints": [],
+      "id": "mXBiurJ75o5BmMenWUYE5",
+      "x": 0,
+      "y": 55.5
+    }
+  ],
+  "relationships": [
+    {
+      "name": "fk_financial_record_company_id_company",
+      "startTableId": "hKQuY58MeVfY1TbIHwtV3",
+      "endTableId": "By6iXi9bzB6eMOCqP5e2e",
+      "fields": [
+        {
+          "startFieldId": "17ev1nHotxGclB9yjRLbv",
+          "endFieldId": "mcR_MANrUF48ZNrgo4ER2"
+        }
+      ],
+      "endFieldId": "mcR_MANrUF48ZNrgo4ER2",
+      "startFieldId": "17ev1nHotxGclB9yjRLbv",
+      "id": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "cardinality": "many_to_one",
+      "color": "#050505"
+    },
+    {
+      "name": "fk_saved_comparison_user_id_user",
+      "startTableId": "1xglUd8VztVucCuBLOBU_",
+      "endTableId": "WLa92gNXK9il_UY_Wdh8U",
+      "fields": [
+        {
+          "startFieldId": "w2h48V_HHolM3BTadWIVi",
+          "endFieldId": "lZ-o3K5omUD1OL7lfQsBf"
+        }
+      ],
+      "endFieldId": "lZ-o3K5omUD1OL7lfQsBf",
+      "startFieldId": "w2h48V_HHolM3BTadWIVi",
+      "id": 1,
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "cardinality": "many_to_one",
+      "color": "#030303"
+    },
+    {
+      "name": "fk_comparison_company_comparison_id_saved_comparison",
+      "startTableId": "mXBiurJ75o5BmMenWUYE5",
+      "endTableId": "1xglUd8VztVucCuBLOBU_",
+      "fields": [
+        {
+          "startFieldId": "vQzYuy15RPB1PO5o3_9ge",
+          "endFieldId": "tH6elKrN_QD_RjR63i2g2"
+        }
+      ],
+      "endFieldId": "tH6elKrN_QD_RjR63i2g2",
+      "startFieldId": "vQzYuy15RPB1PO5o3_9ge",
+      "id": 2,
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "cardinality": "many_to_one",
+      "color": "#050505"
+    },
+    {
+      "name": "fk_comparison_company_company_id_company",
+      "startTableId": "mXBiurJ75o5BmMenWUYE5",
+      "endTableId": "By6iXi9bzB6eMOCqP5e2e",
+      "fields": [
+        {
+          "startFieldId": "e3kSI5t3Ydj2nTB_yoGTo",
+          "endFieldId": "mcR_MANrUF48ZNrgo4ER2"
+        }
+      ],
+      "endFieldId": "mcR_MANrUF48ZNrgo4ER2",
+      "startFieldId": "e3kSI5t3Ydj2nTB_yoGTo",
+      "id": 3,
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "cardinality": "many_to_one",
+      "color": "#050505"
+    }
+  ],
+  "notes": [],
+  "subjectAreas": [],
+  "views": [],
+  "database": "sqlite",
+  "title": "5425_Modelo ER"
+}
