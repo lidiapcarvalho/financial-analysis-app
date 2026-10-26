@@ -63,4 +63,3 @@ financial-analysis-app/
 ## 7. Estado do Projeto
 
 **Fase atual:** planeamento, documentação e modelação da base de dados.
-
