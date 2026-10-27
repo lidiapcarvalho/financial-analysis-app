@@ -9,6 +9,10 @@ DATABASE_PATH = PROJECT_DIR / "data" / "financial_analysis.db"
 
 def get_connection(database_path=DATABASE_PATH):
     """Estabelece uma ligação à base de dados SQLite"""
+
+    if database_path is None:
+        database_path = DATABASE_PATH
+
     connection = sqlite3.connect(database_path)
     connection.execute("PRAGMA foreign_keys = ON")
     return connection

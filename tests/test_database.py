@@ -151,3 +151,25 @@ def test_cannot_insert_record_for_nonexistent_company(tmp_path):
             raise AssertionError(
                 "A base de dados permitiu um registo sem empresa associada."
             )
+
+
+def test_get_all_companies_returns_registered_companies(tmp_path):
+    from src.companies import get_all_companies
+    from src.database import get_connection, initialize_database
+
+    database_path = tmp_path / "test_companies.db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO company (name, sector, currency)
+            VALUES (?, ?, ?)
+            """,
+            ("LVMH", "Luxury", "EUR")
+        )
+
+    companies = get_all_companies(database_path)
+
+    assert len(companies) == 1
+    assert companies[0][1:] == ("LVMH", "Luxury", "EUR")
