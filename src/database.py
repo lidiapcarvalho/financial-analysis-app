@@ -7,22 +7,22 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATABASE_PATH = PROJECT_DIR / "data" / "financial_analysis.db"
 
 
-def get_connection():
+def get_connection(database_path=DATABASE_PATH):
     """Estabelece uma ligação à base de dados SQLite"""
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.execute("PRAGMA forign_keys = ON")
+    connection = sqlite3.connect(database_path)
+    connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
 
-def initialize_database():
+def initialize_database(database_path=DATABASE_PATH):
     """Cria as tabelas de aplicação, caso ainda não existam."""
 
-    with get_connection() as connection:
+    with get_connection(database_path) as connection:
         connection.execute("""
             CREATE TABLE IF NOT EXISTS company (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
-                sector TEXT NOT NULL UNIQUE,
+                sector TEXT NOT NULL,
                 currency TEXT NOT NULL    
             )
         """)
