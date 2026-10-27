@@ -6,7 +6,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Financial Aanalysis App")
+st.title("Financial Analysis App")
 
 st.write(
     "Plataforma de análise e comparação de dados financeiros"
@@ -27,6 +27,6 @@ st.markdown(
 )
 
 st.info(
-    "Projeto em desenvolvimento. As funcionalidades serão"
+    "Projeto em desenvolvimento. As funcionalidades serão "
     "adicionadas progressivamente."
 )

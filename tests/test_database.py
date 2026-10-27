@@ -2,6 +2,8 @@
 import sqlite3
 from pathlib import Path
 
+# Teste 1: Verifica se as tabelas company e financial_record existem na base de dados
+
 
 def test_database_tables_exist():
     project_dir = Path(__file__).resolve().parent.parent
@@ -17,6 +19,8 @@ def test_database_tables_exist():
 
     assert "company" in table_names
     assert "financial_record" in table_names
+
+# Teste 2: Verifica se initialize_database() cria as tabelas necessárias numa base de dados temporária
 
 
 def test_initialize_database_creates_tables(tmp_path):
@@ -36,6 +40,8 @@ def test_initialize_database_creates_tables(tmp_path):
 
     assert "company" in table_names
     assert "financial_record" in table_names
+
+# Teste 3: Verifica se é possível inserir uma empresa, associar-lhe um registo financeiro e consultar os dados
 
 
 def test_insert_company_and_financial_record(tmp_path):
@@ -78,6 +84,8 @@ def test_insert_company_and_financial_record(tmp_path):
 
     assert record == (company_id, 2025, 80000)
 
+# Teste 4: Verifica se a base de dados impede a criação de dois registos financeiros da mesma empresa no mesmo ano fiscal
+
 
 def test_cannot_insert_duplicate_financial_record(tmp_path):
     from src.database import initialize_database
@@ -117,4 +125,29 @@ def test_cannot_insert_duplicate_financial_record(tmp_path):
         else:
             raise AssertionError(
                 "A base de dados permitiu um registo duplicado."
+            )
+
+# Teste 5: Verifica se a chave estrangeira impede a inserção de um registo financeiro associado a uma empresa inexistente
+
+
+def test_cannot_insert_record_for_nonexistent_company(tmp_path):
+    from src.database import get_connection, initialize_database
+
+    database_path = tmp_path / "test_foreign_key,db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+        try:
+            connection.execute(
+                """
+                INSERT INTO financial_record (company_id, fiscal_year)
+                VALUES (?, ?)
+                """,
+                (999, 2025)
+            )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError(
+                "A base de dados permitiu um registo sem empresa associada."
             )
