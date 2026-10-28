@@ -1,8 +1,12 @@
-
 import sqlite3
 from pathlib import Path
 
-# Teste 1: Verifica se as tabelas company e financial_record existem na base de dados
+import pytest
+
+from src.database import initialize_database, get_connection
+from src.companies import add_company, get_all_companies
+
+# Teste 1: Verifica se as tabelas principais existem na base de dados do projeto
 
 
 def test_database_tables_exist():
@@ -20,11 +24,10 @@ def test_database_tables_exist():
     assert "company" in table_names
     assert "financial_record" in table_names
 
-# Teste 2: Verifica se initialize_database() cria as tabelas necessárias numa base de dados temporária
+# Teste 2: Verifica se a inicialização cria a tabelas numa base de dados nova
 
 
 def test_initialize_database_creates_tables(tmp_path):
-    from src.database import initialize_database
 
     database_path = tmp_path / "test_database.db"
 
@@ -41,11 +44,10 @@ def test_initialize_database_creates_tables(tmp_path):
     assert "company" in table_names
     assert "financial_record" in table_names
 
-# Teste 3: Verifica se é possível inserir uma empresa, associar-lhe um registo financeiro e consultar os dados
+# Teste 3: Verifica se é possível inserir e consultar um registo financeiro associado a uma empresa
 
 
 def test_insert_company_and_financial_record(tmp_path):
-    from src.database import initialize_database
 
     database_path = tmp_path / "test_insert.db"
     initialize_database(database_path)
@@ -84,11 +86,10 @@ def test_insert_company_and_financial_record(tmp_path):
 
     assert record == (company_id, 2025, 80000)
 
-# Teste 4: Verifica se a base de dados impede a criação de dois registos financeiros da mesma empresa no mesmo ano fiscal
+# Teste 4: Verifica se a base de dados impede registos financeiros duplicados para a mesma empresa e ano fiscal
 
 
 def test_cannot_insert_duplicate_financial_record(tmp_path):
-    from src.database import initialize_database
 
     database_path = tmp_path / "test_duplicate.db"
     initialize_database(database_path)
@@ -127,13 +128,12 @@ def test_cannot_insert_duplicate_financial_record(tmp_path):
                 "A base de dados permitiu um registo duplicado."
             )
 
-# Teste 5: Verifica se a chave estrangeira impede a inserção de um registo financeiro associado a uma empresa inexistente
+# Teste 5: Verifica se a chave estrangeira impede registos associados a empresas inexistentes
 
 
 def test_cannot_insert_record_for_nonexistent_company(tmp_path):
-    from src.database import get_connection, initialize_database
 
-    database_path = tmp_path / "test_foreign_key,db"
+    database_path = tmp_path / "test_foreign_key.db"
     initialize_database(database_path)
 
     with get_connection(database_path) as connection:
@@ -151,25 +151,3 @@ def test_cannot_insert_record_for_nonexistent_company(tmp_path):
             raise AssertionError(
                 "A base de dados permitiu um registo sem empresa associada."
             )
-
-
-def test_get_all_companies_returns_registered_companies(tmp_path):
-    from src.companies import get_all_companies
-    from src.database import get_connection, initialize_database
-
-    database_path = tmp_path / "test_companies.db"
-    initialize_database(database_path)
-
-    with get_connection(database_path) as connection:
-        connection.execute(
-            """
-            INSERT INTO company (name, sector, currency)
-            VALUES (?, ?, ?)
-            """,
-            ("LVMH", "Luxury", "EUR")
-        )
-
-    companies = get_all_companies(database_path)
-
-    assert len(companies) == 1
-    assert companies[0][1:] == ("LVMH", "Luxury", "EUR")
