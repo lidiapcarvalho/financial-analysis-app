@@ -151,3 +151,15 @@ def test_cannot_insert_record_for_nonexistent_company(tmp_path):
             raise AssertionError(
                 "A base de dados permitiu um registo sem empresa associada."
             )
+
+# Teste 6: Verifica se a inicialização cria a pasta e a base de dados
+
+
+def test_initialize_database_creates_missing_directory(tmp_path):
+
+    database_path = tmp_path / "new_folder" / "test.db"
+
+    initialize_database(database_path)
+
+    assert database_path.parent.exists()
+    assert database_path.exists()

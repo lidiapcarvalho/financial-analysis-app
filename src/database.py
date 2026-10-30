@@ -21,6 +21,10 @@ def get_connection(database_path=DATABASE_PATH):
 def initialize_database(database_path=DATABASE_PATH):
     """Cria as tabelas de aplicação, caso ainda não existam."""
 
+    # Garante que a pasta da base de dados existe
+    database_path = Path(database_path)
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+
     with get_connection(database_path) as connection:
         connection.execute("""
             CREATE TABLE IF NOT EXISTS company (
