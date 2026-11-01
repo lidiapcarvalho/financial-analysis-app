@@ -1,7 +1,7 @@
 import sqlite3
 import streamlit as st
 
-from src.companies import add_company, get_all_companies
+from src.companies import add_company, get_all_companies, update_company
 from src.database import initialize_database
 
 
@@ -82,9 +82,59 @@ if companies:
     )
 
 else:
-    stt.info("Ainda não existem empresas registadas.")
+    st.info("Ainda não existem empresas registadas.")
 
 st.info(
     "Projeto em desenvolvimento. As funcionalidades serão "
     "adicionadas progressivamente."
 )
+
+st.divider()
+
+st.subheader("Editar empresa")
+
+if companies:
+    selected_company = st.selectbox(
+        "Selecionar empresa",
+        companies,
+        format_func=lambda company: company[1]
+    )
+
+    with st.form("edit_company_form"):
+        new_name = st.text_input(
+            "Novo nome da empresa",
+            value=selected_company[1]
+        )
+        new_sector = st.text_input(
+            "Novo setor",
+            value=selected_company[2]
+        )
+        new_currency = st.text_input(
+            "Nova moeda",
+            value=selected_company[3]
+        )
+
+        submitted = st.form_submit_button("Guardar alterações")
+
+    if submitted:
+        try:
+            update_company(
+                selected_company[0],
+                new_name,
+                new_sector,
+                new_currency
+            )
+
+            st.success(
+                f"Os dados de {new_name.strip()} foram atualizados com sucesso!")
+            st.rerun()
+
+        except ValueError as error:
+            st.error(str(error))
+
+        except sqlite3.IntegrityError as error:
+            if "UNIQUE constraint failed: company.name" in str(error):
+                st.error("Já existe uma empresa registada com esse nome.")
+            else:
+                st.error(
+                    "Ocorreu um erro ao guardar as alterações na base de dados.")
