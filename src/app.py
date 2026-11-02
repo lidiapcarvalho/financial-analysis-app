@@ -1,7 +1,12 @@
 import sqlite3
 import streamlit as st
 
-from src.companies import add_company, get_all_companies, update_company
+from src.companies import (
+    add_company,
+    get_all_companies,
+    update_company,
+    delete_company
+)
 from src.database import initialize_database
 
 
@@ -36,6 +41,13 @@ st.markdown(
 
 st.divider()
 
+st.info(
+    "Projeto em desenvolvimento. As funcionalidades serão "
+    "adicionadas progressivamente."
+)
+
+st.divider()
+
 st.subheader("Registar empresa")
 
 with st.form("company_form"):
@@ -65,6 +77,11 @@ st.subheader("Empresas registadas")
 
 companies = get_all_companies()
 
+deleted_message = st.session_state.pop("company_deleted_message", None)
+
+if deleted_message:
+    st.success(deleted_message)
+
 if companies:
     companies_data = [
         {
@@ -83,11 +100,6 @@ if companies:
 
 else:
     st.info("Ainda não existem empresas registadas.")
-
-st.info(
-    "Projeto em desenvolvimento. As funcionalidades serão "
-    "adicionadas progressivamente."
-)
 
 st.divider()
 
@@ -138,3 +150,44 @@ if companies:
             else:
                 st.error(
                     "Ocorreu um erro ao guardar as alterações na base de dados.")
+
+st.divider()
+
+st.subheader("Eliminar empresa")
+
+if companies:
+    selected_company_to_delete = st.selectbox(
+        "Selecionar empresa para eliminar",
+        companies,
+        format_func=lambda company: company[1],
+        key="delete_company_selectbox"
+    )
+
+    with st.form("delete_company_form"):
+        confirme_delete = st.checkbox(
+            f"Confirmo que pretendo eliminar esta empresa."
+        )
+
+        submitted = st.form_submit_button("Eliminar empresa")
+
+    if submitted:
+        # Seleção da empresa e formulário
+
+        if not confirme_delete:
+            st.warning("É necessário confirmar a eliminação.")
+
+        else:
+            try:
+                delete_company(selected_company_to_delete[0])
+                st.session_state["company_deleted_message"] = (
+                    f"A empresa {selected_company_to_delete[1]} "
+                    "foi eliminada com sucesso!"
+                )
+                st.rerun()
+
+            except ValueError as error:
+                st.error(str(error))
+
+else:
+    if not deleted_message:
+        st.info("Não existem empresas disponíveis para eliminar.")
