@@ -219,3 +219,33 @@ st.rerun()
 ```
 
 Neste caso, a aplicação é executada novamente após a atualização dos dados, permitindo que a tabela apresente a informação mais recente.
+
+## 7. SQLite - Operações CRUD e JOIN
+
+### Operações CRUD
+
+As operações CRUD representam as quatro operações fundamentais de gestão de dados:
+- `CREATE` - inserir novos registos com `INSERT INTO`.
+- `READ` - consultar registos com `SELECT`.
+- `UPDATE` - atualizar registos existentes com `UPDATE`.
+- `DELETE` - eliminar registos com `DELETE`.
+
+### `INNER JOIN`
+
+O `INNER JOIN` permite combinar dados de duas ou mais tabelas através de uma coluna relacionada.
+
+No projeto, é utilizado para associar os registos financeiros à respetiva empresa:
+
+```sql
+FROM financial_record AS fr
+INNER JOIN company AS c
+    ON fr.company_id = c.id
+```
+Desta forma, a consulta consegue apresentar os dados financeiros juntamente com o nome e a moeda da empresa.
+
+### Outros conceitos
+
+- **Foreign Key** - estabelece uma relação entre tabelas e garante a integridade referencial.
+- `cursor.lastowid` - devolve o ID do último registo inserido.
+- `cursor.rowcount` - indica o número de linhas afastadas por uma operação.
+- **`?` (placeholders)** - permitem passar valores como parâmetros nas instruções SQL, evitando concatenar diretamente os valores na consulta.
