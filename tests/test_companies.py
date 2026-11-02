@@ -1,7 +1,12 @@
 import sqlite3
 import pytest
 
-from src.companies import add_company, get_all_companies, update_company
+from src.companies import (
+    add_company,
+    get_all_companies,
+    update_company,
+    delete_company
+)
 from src.database import initialize_database, get_connection
 
 # Teste 1: Verifica se a função devolve as empresas registadas, com os respetivos dados
@@ -168,6 +173,7 @@ def test_update_company_empty_fields(
 
 # Teste 9: Testar a normalização dos valores
 
+
 def test_update_company_normalizes_inputs(tmp_path):
     """Testa a normalização dos dados durante a atualização."""
 
@@ -190,6 +196,7 @@ def test_update_company_normalizes_inputs(tmp_path):
 
 # Teste 10: Testar a alteração da moeda sem registos financeiros
 
+
 def test_update_company_currency_without_financial_records(tmp_path):
     """Testa a alteração da moeda sem registos financeiros."""
 
@@ -211,6 +218,7 @@ def test_update_company_currency_without_financial_records(tmp_path):
     ]
 
 # Testar 11: Impedir a alteração da moeda com registos financeiros
+
 
 def test_update_company_currency_with_financial_records(tmp_path):
     """Testa o bloqueio da alteração da moeda com registos financeiros."""
@@ -240,3 +248,50 @@ def test_update_company_currency_with_financial_records(tmp_path):
         update_company(
             company_id, "LVMH", "Luxury", "USD", database_path
         )
+
+# Teste 12: Eliminar uma empresa existente sem registos financeiros
+
+
+def test_delete_company(tmp_path):
+    """Testa a eliminação de uma empresa sem registos fianceiros"""
+
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury", "EUR", database_path
+    )
+
+    delete_company(company_id, database_path)
+
+    companies = get_all_companies(database_path)
+
+    assert companies == []
+
+# Teste 13: Impedir a elimnação de uma empresa com registos financeiros
+
+
+def test_delete_company_with_financial_records(tmp_path):
+    """Testa o bloqueio da eliminação de uma empresa com registos financeiros."""
+
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury", "EUR", database_path
+    )
+
+    with get_connection(database_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO financial_record (company_id, fiscal_year)
+            VALUES (?, ?)
+            """,
+            (company_id, 2025)
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="Não é possível eliminar uma empresa com registos financeiros associados."
+    ):
+        delete_company(company_id, database_path)

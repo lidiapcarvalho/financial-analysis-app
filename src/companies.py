@@ -105,3 +105,44 @@ def update_company(company_id, name, sector, currency, database_path=None):
             """,
             (name, sector, currency, company_id)
         )
+
+
+def delete_company(company_id, database_path=None):
+    """Elimina uma empresa da base de dados, caso não tenha registos financeiros associados."""
+
+    with get_connection(database_path) as connection:
+        company = connection.execute(
+            """
+            SELECT id
+            FROM company
+            WHERE id = ?
+            """,
+            (company_id,)
+        ).fetchone()
+
+        if company is None:
+            raise ValueError("A empresa não existe.")
+
+        financial_records = connection.execute(
+            """
+            SELECT id
+            FROM financial_record
+            WHERE company_id = ?
+            LIMIT 1
+            """,
+            (company_id,)
+        ).fetchone()
+
+        if financial_records is not None:
+            raise ValueError(
+                "Não é possível eliminar uma empresa com "
+                "registos financeiros associados."
+            )
+
+        connection.execute(
+            """
+            DELETE FROM company
+            WHERE id = ?
+            """,
+            (company_id,)
+        )
