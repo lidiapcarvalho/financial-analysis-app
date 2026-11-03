@@ -166,7 +166,7 @@ def test_validate_fiscal_year_invalid_type(fiscal_year):
     with pytest.raises(ValueError):
         _validate_fiscal_year(fiscal_year)
 
-# Teste 7: Validação de valores financeiros obrigatórios e não negativos
+# Teste 7: Validação de valores financeiros não negativos
 
 
 @pytest.mark.parametrize(
@@ -207,7 +207,7 @@ def test_validate_non_negative_value_not_finite(value):
     with pytest.raises(ValueError):
         _validate_non_negative_value(value, "revenue")
 
-# Teste 8: Validação de valores financeiros obrigatórios que podem ser negativos
+# Teste 8: Validação de valores financeiros que podem ser negativos
 
 
 @pytest.mark.parametrize(
@@ -238,7 +238,7 @@ def test_validate_numeric_value_not_finite(value):
     with pytest.raises(ValueError):
         _validate_numeric_value(value, "net_income")
 
-# Teste 9: Rejeitção de anos fiscais inválidos ao criar registos
+# Teste 9: Rejeitção de anos fiscais inválidos na criação de registos
 
 
 @pytest.mark.parametrize(
@@ -246,7 +246,7 @@ def test_validate_numeric_value_not_finite(value):
     [1899, 2101, 2025.5, "2025", True]
 )
 def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
-    """Testa a rejeição de anos fiscais inválidos ao criar registos."""
+    """Testa a rejeição de anos fiscais inválidos na criação de registos."""
 
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
@@ -262,7 +262,7 @@ def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     assert get_all_financial_records(database_path) == []
 
 
-# Teste 10: Rejeição de valores financeiros inválidos
+# Teste 10: Rejeição de valores financeiros inválidos na criação de registos
 
 @pytest.mark.parametrize(
     "field_values",
@@ -276,7 +276,7 @@ def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     ]
 )
 def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
-    """Testa a rejeição de valores financeiros inválidos."""
+    """Testa a rejeição de valores financeiros inválidos na criação de registos."""
 
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
@@ -309,7 +309,7 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
 
     assert get_all_financial_records(database_path) == []
 
-# Teste 11: Testa a criação de registos com resultados financeiros negativos
+# Teste 11: Aceitação de resultados financeiros negativos na criação de registos
 
 
 def test_add_financial_record_accepts_negative_values(tmp_path):
@@ -333,7 +333,7 @@ def test_add_financial_record_accepts_negative_values(tmp_path):
     assert records[0][6] == -150.0
     assert records[0][9] == -800.0
 
-# Teste 12: Testa a rejeição de anos fiscais inválidos ao atualizar registos
+# Teste 12: Rejeição de anos fiscais inválidos na atualização de registos
 
 
 @pytest.mark.parametrize(
@@ -341,7 +341,7 @@ def test_add_financial_record_accepts_negative_values(tmp_path):
     [1899, 2101, 2025.5, "2025", True]
 )
 def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
-    """Testa a rejeição de anos fiscais inválidos ao atualizar registos."""
+    """Testa a rejeição de anos fiscais inválidos na atualização de registos."""
 
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
@@ -363,7 +363,7 @@ def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     assert len(records) == 1
     assert records[0][3] == 2025
 
-# Teste 13: Testa a rejeição de valores financeiros inválidos ao atualizar registos
+# Teste 13: Testa a rejeição de valores financeiros inválidos na atualização de registos
 
 
 @pytest.mark.parametrize(
@@ -378,7 +378,7 @@ def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     ]
 )
 def test_update_financial_record_invalid_financial_values(tmp_path, field_values):
-    """Testa a rejeição de valores financeiros inválidos ao atualizar registos."""
+    """Testa a rejeição de valores financeiros inválidos na atualização de registos."""
 
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
@@ -421,7 +421,7 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
     assert records[0][9] == 800.0
 
 
-# Teste 14: Testar a duplicação de registos financeiros
+# Teste 14: Rejeição de registos financeiros duplicados na criação
 
 def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
     database_path = tmp_path / "test.db"
@@ -448,7 +448,7 @@ def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
     records = get_all_financial_records(database_path)
     assert len(records) == 1
 
-# Teste 15: Impedir que a atualização cria um registo duplicado
+# Teste 15: Rejeição de registos financeiros duplicados na atualização
 
 
 def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
