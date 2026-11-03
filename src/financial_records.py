@@ -1,4 +1,5 @@
 import math
+import sqlite3
 
 from src.database import get_connection
 
@@ -72,14 +73,26 @@ def add_financial_record(company_id, fiscal_year, revenue, operating_income, net
     _validate_numeric_value(equity, "equity")
 
     with get_connection(database_path) as connection:
-        cursor = connection.execute(
-            """
-            INSERT INTO financial_record (company_id, fiscal_year, revenue, operating_income, net_income, total_assets, total_liabilities, equity)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (company_id, fiscal_year, revenue, operating_income,
-             net_income, total_assets, total_liabilities, equity)
-        )
+        try:
+            cursor = connection.execute(
+                """
+                INSERT INTO financial_record (company_id, fiscal_year, revenue, operating_income, net_income, total_assets, total_liabilities, equity)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    company_id, fiscal_year, revenue, operating_income,
+                    net_income, total_assets, total_liabilities, equity
+                )
+            )
+        except sqlite3.IntegrityError as error:
+            if error.sqlite_errorname == "SQLITE_CONSTRAINT_FOREIGNKEY":
+                raise ValueError(
+                    f"A empresa associada ao registo financeiro não existe.") from error
+
+            elif error.sqlite_errorname == "SQLITE_CONSTRAINT_UNIQUE":
+                raise ValueError(
+                    f"Já existe um registo financeiro para esta empresa e ano fiscal.") from error
+            raise
 
         return cursor.lastrowid
 
@@ -100,23 +113,31 @@ def update_financial_record(
     _validate_numeric_value(equity, "equity")
 
     with get_connection(database_path) as connection:
-        cursor = connection.execute(
-            """
-            UPDATE financial_record
-            SET fiscal_year = ?, 
-                revenue = ?, 
-                operating_income = ?, 
-                net_income = ?, 
-                total_assets = ?, 
-                total_liabilities = ?, 
-                equity = ?
-            WHERE id = ?
-            """,
-            (
-                fiscal_year, revenue, operating_income,
-                net_income, total_assets, total_liabilities,
-                equity, record_id)
-        )
+        try:
+            cursor = connection.execute(
+                """
+                UPDATE financial_record
+                SET fiscal_year = ?, 
+                    revenue = ?, 
+                    operating_income = ?, 
+                    net_income = ?, 
+                    total_assets = ?, 
+                    total_liabilities = ?, 
+                    equity = ?
+                WHERE id = ?
+                """,
+                (
+                    fiscal_year, revenue, operating_income,
+                    net_income, total_assets, total_liabilities,
+                    equity, record_id
+                )
+            )
+        except sqlite3.IntegrityError as error:
+            if error.sqlite_errorname == "SQLITE_CONSTRAINT_UNIQUE":
+                raise ValueError(
+                    f"Já existe um registo financeiro para esta empresa e ano fiscal.") from error
+            raise
+
         return cursor.rowcount
 
 

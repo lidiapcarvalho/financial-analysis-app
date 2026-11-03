@@ -1,4 +1,5 @@
 import pytest
+import sqlite3
 
 from src.financial_records import (
     get_all_financial_records,
@@ -364,6 +365,7 @@ def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
 
 # Teste 13: Testa a rejeição de valores financeiros inválidos ao atualizar registos
 
+
 @pytest.mark.parametrize(
     "field_values",
     [
@@ -417,3 +419,67 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
     assert records[0][5] == 250.0
     assert records[0][6] == 150.0
     assert records[0][9] == 800.0
+
+
+# Teste 14: Testar a duplicação de registos financeiros
+
+def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury Goods", "EUR", database_path
+    )
+
+    add_financial_record(
+        company_id, 2025, 80000, 15000, 10000,
+        120000, 50000, 70000, database_path
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Já existe um registo financeiro para esta empresa e ano fiscal."
+    ):
+        add_financial_record(
+            company_id, 2025, 90000, 16000, 11000,
+            130000, 55000, 75000, database_path
+        )
+
+    records = get_all_financial_records(database_path)
+    assert len(records) == 1
+
+# Teste 15: Impedir que a atualização cria um registo duplicado
+
+
+def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury Goods", "EUR", database_path
+    )
+
+    first_record_id = add_financial_record(
+        company_id, 2024, 80000, 15000, 10000,
+        120000, 50000, 70000, database_path
+    )
+
+    add_financial_record(
+        company_id, 2025, 90000, 16000, 11000,
+        130000, 55000, 75000, database_path
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Já existe um registo financeiro para esta empresa e ano fiscal."
+    ):
+        update_financial_record(
+            first_record_id, 2025, 85000, 15500, 10500,
+            125000, 52000, 73000, database_path
+        )
+
+    records = get_all_financial_records(database_path)
+
+    assert len(records) == 2
+    assert records[0][3] == 2025
+    assert records[1][3] == 2024
