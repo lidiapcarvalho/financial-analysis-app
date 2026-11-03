@@ -1,3 +1,5 @@
+import math
+
 from src.database import get_connection
 
 
@@ -28,8 +30,46 @@ def get_all_financial_records(database_path=None):
     return financial_records
 
 
+def _validate_fiscal_year(fiscal_year):
+    """Valida o ano fiscal."""
+    if isinstance(fiscal_year, bool) or not isinstance(fiscal_year, int):
+        raise ValueError("O ano fiscal tem de ser um número inteiro.")
+
+    if not 1900 <= fiscal_year <= 2100:
+        raise ValueError("O ano fiscal tem de estar entre 1900 e 2100.")
+
+
+def _validate_non_negative_value(value, field_name):
+    """Valida um valor financeiro obrigatório e não negativo."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{field_name} tem de ser um número.")
+
+    if not math.isfinite(value):
+        raise ValueError(f"{field_name} tem de ser um número finito.")
+
+    if value < 0:
+        raise ValueError(f"{field_name} não pode ser negativo.")
+
+
+def _validate_numeric_value(value, field_name):
+    """Valida um valor financeiro obrigatório que pode ser negativo."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{field_name} tem de ser um número.")
+
+    if not math.isfinite(value):
+        raise ValueError(f"{field_name} tem de ser um número finito.")
+
+
 def add_financial_record(company_id, fiscal_year, revenue, operating_income, net_income, total_assets, total_liabilities, equity, database_path=None):
     """Regista um novo registo financeiro associado a uma empresa."""
+    _validate_fiscal_year(fiscal_year)
+
+    _validate_non_negative_value(revenue, "revenue")
+    _validate_numeric_value(operating_income, "operating_income")
+    _validate_numeric_value(net_income, "net_income")
+    _validate_non_negative_value(total_assets, "total_assets")
+    _validate_non_negative_value(total_liabilities, "total_liabilities")
+    _validate_numeric_value(equity, "equity")
 
     with get_connection(database_path) as connection:
         cursor = connection.execute(
@@ -50,6 +90,14 @@ def update_financial_record(
     database_path=None
 ):
     """Atualiza os dados deum registo financeiro existente."""
+    _validate_fiscal_year(fiscal_year)
+
+    _validate_non_negative_value(revenue, "revenue")
+    _validate_numeric_value(operating_income, "operating_income")
+    _validate_numeric_value(net_income, "net_income")
+    _validate_non_negative_value(total_assets, "total_assets")
+    _validate_non_negative_value(total_liabilities, "total_liabilities")
+    _validate_numeric_value(equity, "equity")
 
     with get_connection(database_path) as connection:
         cursor = connection.execute(
