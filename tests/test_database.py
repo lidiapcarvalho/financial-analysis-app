@@ -55,10 +55,10 @@ def test_insert_company_and_financial_record(tmp_path):
     with sqlite3.connect(database_path) as connection:
         cursor = connection.execute(
             """
-            INSERT INTO company (name, sector, currency)
-            VALUES (?, ?, ?)
+            INSERT INTO company (name, sector)
+            VALUES (?, ?)
             """,
-            ("LVMH", "Luxury", "EUR")
+            ("LVMH", "Luxury")
         )
 
         company_id = cursor.lastrowid
@@ -68,13 +68,19 @@ def test_insert_company_and_financial_record(tmp_path):
             INSERT INTO financial_record (
                 company_id,
                 fiscal_year,
+                period_end,
+                currency,
+                unit,
                 revenue,
                 operating_income,
-                net_income
+                net_income,
+                total_assets,
+                total_liabilities
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (company_id, 2025, 80000, 15000, 10000)
+            (company_id, 2025, "2025-12-31", "EUR",
+             "millions", 80000, 15000, 10000, 20000, 10000)
         )
 
         record = connection.execute(
@@ -97,20 +103,32 @@ def test_cannot_insert_duplicate_financial_record(tmp_path):
     with sqlite3.connect(database_path) as connection:
         cursor = connection.execute(
             """
-            INSERT INTO company (name, sector, currency)
-            VALUES (?, ?, ?)
+            INSERT INTO company (name, sector)
+            VALUES (?, ?)
             """,
-            ("LVMH", "Luxury", "EUR")
+            ("LVMH", "Luxury")
         )
 
         company_id = cursor.lastrowid
 
         connection.execute(
             """
-            INSERT INTO financial_record (company_id, fiscal_year)
-            VALUES (?, ?)
+            INSERT INTO financial_record (
+                company_id,
+                fiscal_year,
+                period_end,
+                currency,
+                unit,
+                revenue,
+                operating_income,
+                net_income,
+                total_assets,
+                total_liabilities
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (company_id, 2025)
+            (company_id, 2025, "2025-12-31", "EUR",
+                "millions", 80000, 15000, 10000, 20000, 10000)
         )
 
         try:
