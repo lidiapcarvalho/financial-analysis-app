@@ -20,16 +20,16 @@ def test_get_all_companies_returns_registered_companies(tmp_path):
     with get_connection(database_path) as connection:
         connection.execute(
             """
-            INSERT INTO company (name, sector, currency)
-            VALUES (?, ?, ?)
+            INSERT INTO company (name, sector)
+            VALUES (?, ?)
             """,
-            ("LVMH", "Luxury", "EUR")
+            ("LVMH", "Luxury")
         )
 
     companies = get_all_companies(database_path)
 
     assert len(companies) == 1
-    assert companies[0][1:] == ("LVMH", "Luxury", "EUR")
+    assert companies[0][1:] == ("LVMH", "Luxury")
 
 # Teste 2: Verifica se a o registo de uma empresa devolve o seu identificador e guarda os dados corretamente
 
@@ -42,7 +42,6 @@ def test_add_company_returns_company_id(tmp_path):
     company_id = add_company(
         "LVMH",
         "Luxury",
-        "EUR",
         database_path
     )
 
@@ -50,7 +49,7 @@ def test_add_company_returns_company_id(tmp_path):
 
     assert company_id == 1
     assert len(companies) == 1
-    assert companies[0][1:] == ("LVMH", "Luxury", "EUR")
+    assert companies[0][1:] == ("LVMH", "Luxury")
 
 # Teste 3: Verifica se a função impede o registo de empresas com nomes duplicados
 
@@ -60,12 +59,12 @@ def test_add_company_rejects_duplicate_name(tmp_path):
     database_path = tmp_path / "test_duplicate_company.db"
     initialize_database(database_path)
 
-    add_company("LVMH", "Luxury", "EUR", database_path)
+    add_company("LVMH", "Luxury", database_path)
 
     with pytest.raises(sqlite3.IntegrityError):
-        add_company("LVMH", "Luxury", "EUR", database_path)
+        add_company("LVMH", "Luxury", database_path)
 
-# Teste 4: Verifica se a função rejeita empresas sem nome, setor ou moeda
+# Teste 4: Verifica se a função rejeita empresas sem nome ou setor
 
 
 def test_add_company_rejects_empty_required_fields(tmp_path):
@@ -74,21 +73,19 @@ def test_add_company_rejects_empty_required_fields(tmp_path):
     initialize_database(database_path)
 
     invalid_companies = [
-        ("", "Luxury", "EUR"),
-        ("LVMH", "", "EUR"),
-        ("LVMH", "Luxury", "")
+        ("", "Luxury"),
+        ("LVMH", "")
     ]
 
-    for name, sector, currency in invalid_companies:
+    for name, sector in invalid_companies:
         with pytest.raises(ValueError):
             add_company(
                 name,
                 sector,
-                currency,
                 database_path
             )
 
-# Teste 5: Verifica se a função remove espaços desnecessários e converte a moeda para maiúsculas
+# Teste 5: Verifica se a função remove espaços desnecessários
 
 
 def test_add_company_normalizes_input_data(tmp_path):
@@ -98,13 +95,12 @@ def test_add_company_normalizes_input_data(tmp_path):
     add_company(
         "  LVMH  ",
         "  Luxury  ",
-        " eur ",
         database_path
     )
 
     companies = get_all_companies(database_path)
 
-    assert companies[0][1:] == ("LVMH", "Luxury", "EUR")
+    assert companies[0][1:] == ("LVMH", "Luxury")
 
 # Teste 6: Atualizar os dados de uma empresa existente
 
@@ -116,17 +112,17 @@ def test_update_company(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     update_company(
-        company_id, "LVMH Group", "Luxury Goods", "EUR", database_path
+        company_id, "LVMH Group", "Luxury Goods", database_path
     )
 
     companies = get_all_companies(database_path)
 
     assert companies == [
-        (company_id, "LVMH Group", "Luxury Goods", "EUR")
+        (company_id, "LVMH Group", "Luxury Goods")
     ]
 
 # Teste 7: Atualização de uma empresa inexistente
@@ -140,22 +136,21 @@ def test_update_nonexistent_company(tmp_path):
 
     with pytest.raises(ValueError, match="A empresa não existe."):
         update_company(
-            999, "Empresa Teste", "Luxury", "EUR", database_path
+            999, "Empresa Teste", "Luxury", database_path
         )
 
 # Teste 8: Testar os campos obrigatórios vazios
 
 
 @pytest.mark.parametrize(
-    "name, sector, currency, expected_error",
+    "name, sector, expected_error",
     [
-        ("", "Luxury", "EUR", "O nome da empresa é obrigatório."),
-        ("LVMH", "", "EUR", "O setor da empresa é obrigatório."),
-        ("LVMH", "Luxury", "", "A moeda da empresa é obrigatória."),
+        ("", "Luxury", "O nome da empresa é obrigatório."),
+        ("LVMH", "", "O setor da empresa é obrigatório.")
     ]
 )
 def test_update_company_empty_fields(
-    tmp_path, name, sector, currency, expected_error
+    tmp_path, name, sector, expected_error
 ):
     """Testa a atualização com campos obrigatórios vazios."""
 
@@ -163,12 +158,12 @@ def test_update_company_empty_fields(
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     with pytest.raises(ValueError, match=expected_error):
         update_company(
-            company_id, name, sector, currency, database_path
+            company_id, name, sector, database_path
         )
 
 # Teste 9: Testar a normalização dos valores
@@ -181,73 +176,18 @@ def test_update_company_normalizes_inputs(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     update_company(
-        company_id, " Kering ", " Luxury ", " eur ", database_path
+        company_id, " Kering ", " Luxury ", database_path
     )
 
     companies = get_all_companies(database_path)
 
     assert companies == [
-        (company_id, "Kering", "Luxury", "EUR")
+        (company_id, "Kering", "Luxury")
     ]
-
-# Teste 10: Testar a alteração da moeda sem registos financeiros
-
-
-def test_update_company_currency_without_financial_records(tmp_path):
-    """Testa a alteração da moeda sem registos financeiros."""
-
-    database_path = tmp_path / "test.db"
-    initialize_database(database_path)
-
-    company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
-    )
-
-    update_company(
-        company_id, "LVMH", "Luxury", "USD", database_path
-    )
-
-    companies = get_all_companies(database_path)
-
-    assert companies == [
-        (company_id, "LVMH", "Luxury", "USD")
-    ]
-
-# Testar 11: Impedir a alteração da moeda com registos financeiros
-
-
-def test_update_company_currency_with_financial_records(tmp_path):
-    """Testa o bloqueio da alteração da moeda com registos financeiros."""
-
-    database_path = tmp_path / "test.db"
-    initialize_database(database_path)
-
-    company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
-    )
-
-    with get_connection(database_path) as connection:
-        connection.execute(
-            """
-            INSERT INTO financial_record (
-                company_id, fiscal_year
-            )
-            VALUES (?, ?)
-            """,
-            (company_id, 2025)
-        )
-
-    with pytest.raises(
-        ValueError,
-        match="Não é possível atualizar a moeda de uma empresa com registos financeiros associados."
-    ):
-        update_company(
-            company_id, "LVMH", "Luxury", "USD", database_path
-        )
 
 # Teste 12: Eliminar uma empresa existente sem registos financeiros
 
@@ -259,7 +199,7 @@ def test_delete_company(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     delete_company(company_id, database_path)
@@ -278,16 +218,34 @@ def test_delete_company_with_financial_records(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     with get_connection(database_path) as connection:
         connection.execute(
             """
-            INSERT INTO financial_record (company_id, fiscal_year)
-            VALUES (?, ?)
+            INSERT INTO financial_record (
+                company_id, 
+                fiscal_year,
+                period_end,
+                currency,
+                unit,
+                revenue,
+                total_assets,
+                total_liabilities
+                )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (company_id, 2025)
+            (
+                company_id,
+                2025,
+                "2025-12-31",
+                "EUR",
+                "millions",
+                1000,
+                500,
+                200
+            )
         )
 
     with pytest.raises(
