@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -66,6 +65,8 @@ for record in company_records:
     revenue = record[6]
     operating_income = record[7]
     net_income = record[8]
+    total_assets = record[9]
+    equity = record[11]
 
     # Identifica a receita do ano fiscal imediatamente anterior
     previous_revenue = None
@@ -88,13 +89,17 @@ for record in company_records:
             revenue,
             operating_income,
             net_income,
-            previous_revenue
+            previous_revenue,
+            total_assets=total_assets,
+            equity=equity
         )
     else:
         indicators = {
             "operating_margin": None,
             "net_profit_margin": None,
-            "revenue_growth": None
+            "revenue_growth": None,
+            "roa": None,
+            "roe": None
         }
 
     analysis_records.append({
@@ -105,9 +110,13 @@ for record in company_records:
         "Revenue": revenue,
         "Operating Income": operating_income,
         "Net Income": net_income,
+        "Total Assets": total_assets,
+        "Equity": equity,
         "Operating Margin (%)": indicators["operating_margin"],
         "Net Profit Margin (%)": indicators["net_profit_margin"],
-        "Revenue Growth (%)": indicators["revenue_growth"]
+        "Revenue Growth (%)": indicators["revenue_growth"],
+        "ROA (%)": indicators["roa"],
+        "ROE (%)": indicators["roe"]
     })
 
 df = pd.DataFrame(analysis_records)
@@ -121,7 +130,52 @@ st.caption(
     f"Último ano fiscal disponível: {int(latest_record['Fiscal Year'])}"
 )
 
+# Apresenta os indicadores financeiros do último ano disponível
+latest_record = df.iloc[-1]
+
 col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(
+        "Margem Operacional",
+        f"{latest_record['Operating Margin (%)']:.2f}%"
+        if pd.notna(latest_record["Operating Margin (%)"])
+        else "N/A"
+    )
+
+with col2:
+    st.metric(
+        "Margem de Lucro Líquida",
+        f"{latest_record['Net Profit Margin (%)']:.2f}%"
+        if pd.notna(latest_record["Net Profit Margin (%)"])
+        else "N/A"
+    )
+
+with col3:
+    st.metric(
+        "Crescimento da Receita",
+        f"{latest_record['Revenue Growth (%)']:.2f}%"
+        if pd.notna(latest_record["Revenue Growth (%)"])
+        else "N/A"
+    )
+
+col4, col5 = st.columns(2)
+
+with col4:
+    st.metric(
+        "ROA — Rendibilidade do Ativo",
+        f"{latest_record['ROA (%)']:.2f}%"
+        if pd.notna(latest_record["ROA (%)"])
+        else "N/A"
+    )
+
+with col5:
+    st.metric(
+        "ROE — Rendibilidade do Capital Próprio",
+        f"{latest_record['ROE (%)']:.2f}%"
+        if pd.notna(latest_record["ROE (%)"])
+        else "N/A"
+    )
 
 operating_margin = latest_record["Operating Margin (%)"]
 net_profit_margin = latest_record["Net Profit Margin (%)"]
