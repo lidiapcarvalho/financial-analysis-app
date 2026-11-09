@@ -34,6 +34,32 @@ def calculate_revenue_growth(current_revenue, previous_revenue):
                       previous_revenue) * 100
     return revenue_growth
 
+# Rendibilidade do Ativo (ROA)
+
+
+def calculate_roa(net_income, total_assets):
+    """Calcula a rendibilidade do ativo em percentagem"""
+
+    if net_income is None or total_assets is None or total_assets == 0:
+        return None
+
+    roa = (net_income / total_assets) * 100
+
+    return roa
+
+# Rendibilidade do Capital Próprio (ROE)
+
+
+def calculate_roe(net_income, equity):
+    """Calcula a rendibilidade do capital prórpio em percentagem"""
+
+    if net_income is None or equity is None or equity == 0:
+        return None
+
+    roe = (net_income / equity) * 100
+
+    return roe
+
 # Calcula e reúne os indicadores financeiros
 
 
@@ -41,7 +67,9 @@ def calculate_financial_indicators(
         revenue,
         operating_income,
         net_income,
-        previous_revenue=None
+        previous_revenue=None,
+        total_assets=None,
+        equity=None
 ):
 
     return {
@@ -53,5 +81,11 @@ def calculate_financial_indicators(
         ),
         "revenue_growth": calculate_revenue_growth(
             revenue, previous_revenue
+        ),
+        "roa": calculate_roa(
+            net_income, total_assets
+        ),
+        "roe": calculate_roe(
+            net_income, equity
         )
     }

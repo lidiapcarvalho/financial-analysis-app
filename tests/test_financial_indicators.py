@@ -2,6 +2,8 @@ from src.financial_indicators import (
     calculate_operating_margin,
     calculate_net_profit_margin,
     calculate_revenue_growth,
+    calculate_roa,
+    calculate_roe,
     calculate_financial_indicators
 )
 
@@ -102,6 +104,82 @@ def test_calculate_revenue_growth_without_current_revenue():
     result = calculate_revenue_growth(None, 1000)
     assert result is None
 
+# Return on Assets (ROA) tests
+
+
+def test_calculate_roa():
+
+    result = calculate_roa(100, 1000)
+    assert result == 10.0
+
+
+def test_calculate_roa_with_negative_net_income():
+
+    result = calculate_roa(-100, 1000)
+    assert result == -10.0
+
+
+def test_calculate_roa_with_zero_net_income():
+
+    result = calculate_roa(0, 1000)
+    assert result == 0.0
+
+
+def test_calculate_roa_with_zero_total_assets():
+
+    result = calculate_roa(100, 0)
+    assert result is None
+
+
+def test_calculate_roa_without_net_income():
+
+    result = calculate_roa(None, 1000)
+    assert result is None
+
+
+def test_calculate_roa_without_total_assets():
+
+    result = calculate_roa(100, None)
+    assert result is None
+
+# Return on Equity (ROE) tests
+
+
+def test_calculate_roe():
+
+    result = calculate_roe(100, 500)
+    assert result == 20.0
+
+
+def test_calculate_roe_with_negative_net_income():
+
+    result = calculate_roe(-100, 500)
+    assert result == -20.0
+
+
+def test_calculate_roe_with_zero_net_income():
+
+    result = calculate_roe(0, 500)
+    assert result == 0.0
+
+
+def test_calculate_roe_with_zero_equity():
+
+    result = calculate_roe(100, 0)
+    assert result is None
+
+
+def test_calculate_roe_without_net_income():
+
+    result = calculate_roe(None, 500)
+    assert result is None
+
+
+def test_calculate_roe_without_equity():
+
+    result = calculate_roe(100, None)
+    assert result is None
+
 # Financial Indicators tests
 
 
@@ -111,17 +189,40 @@ def test_calculate_financial_indicators():
         revenue=100000,
         operating_income=20000,
         net_income=15000,
-        previous_revenue=80000
+        previous_revenue=80000,
+        total_assets=100000,
+        equity=50000
     )
 
     assert result == {
         "operating_margin": 20.0,
         "net_profit_margin": 15.0,
-        "revenue_growth": 25.0
+        "revenue_growth": 25.0,
+        "roa": 15.0,
+        "roe": 30.0
     }
 
 
 def test_calculate_financial_indicators_without_previous_revenue():
+
+    result = calculate_financial_indicators(
+        revenue=100000,
+        operating_income=20000,
+        net_income=15000,
+        total_assets=100000,
+        equity=50000
+    )
+
+    assert result == {
+        "operating_margin": 20.0,
+        "net_profit_margin": 15.0,
+        "revenue_growth": None,
+        "roa": 15.0,
+        "roe": 30.0
+    }
+
+
+def test_calculate_financial_indicators_without_assets_and_equity():
 
     result = calculate_financial_indicators(
         revenue=100000,
@@ -132,5 +233,7 @@ def test_calculate_financial_indicators_without_previous_revenue():
     assert result == {
         "operating_margin": 20.0,
         "net_profit_margin": 15.0,
-        "revenue_growth": None
+        "revenue_growth": None,
+        "roa": None,
+        "roe": None
     }
