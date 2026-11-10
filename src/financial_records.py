@@ -34,6 +34,44 @@ def get_all_financial_records(database_path=None):
     return financial_records
 
 
+def get_financial_records_by_companies(company_ids, database_path=None):
+    """Devolve os registos financeiros das empresas selecionadas"""
+
+    if not company_ids:
+        return []
+
+    placeholders = ", ".join("?" for _ in company_ids)
+
+    with get_connection(database_path) as connection:
+        financial_records = connection.execute(
+            f"""
+            SELECT
+                fr.id,
+                fr.company_id,
+                c.name,
+                fr.fiscal_year,
+                fr.period_end,
+                fr.currency,
+                fr.unit,
+                fr.revenue,
+                fr.operating_income,
+                fr.net_income,
+                fr.total_assets,
+                fr.total_liabilities,
+                fr.equity,
+                fr.equity_attributable_to_owners
+            FROM financial_record AS fr
+            INNER JOIN company AS c
+                ON fr.company_id = c.id
+            WHERE fr.company_id IN ({placeholders})
+            ORDER BY c.name, fr.fiscal_year
+            """,
+            tuple(company_ids)
+        ).fetchall()
+
+    return financial_records
+
+
 def _validate_fiscal_year(fiscal_year):
     """Valida o ano fiscal."""
     if isinstance(fiscal_year, bool) or not isinstance(fiscal_year, int):
