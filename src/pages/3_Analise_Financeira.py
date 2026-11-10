@@ -177,25 +177,6 @@ with col5:
         else "N/A"
     )
 
-operating_margin = latest_record["Operating Margin (%)"]
-net_profit_margin = latest_record["Net Profit Margin (%)"]
-revenue_growth = latest_record["Revenue Growth (%)"]
-
-col1.metric(
-    "Margem Operacional",
-    f"{operating_margin:.2f}%" if pd.notna(operating_margin) else "N/D"
-)
-
-col2.metric(
-    "Margem de Lucro Líquida",
-    f"{net_profit_margin:.2f}%" if pd.notna(net_profit_margin) else "N/D"
-)
-
-col3.metric(
-    "Crescimento da Receita",
-    f"{revenue_growth:.2f}%" if pd.notna(revenue_growth) else "N/D"
-)
-
 st.divider()
 
 # Tabela de dados financeiros e indicadores
@@ -209,144 +190,239 @@ st.dataframe(
 
 st.divider()
 
-# Gráfico da evolução da receita
-st.subheader("Evolução da Receita")
+if df["Fiscal Year"].nunique() >= 2:
 
-revenue_chart = px.line(
-    df,
-    x="Fiscal Year",
-    y="Revenue",
-    markers=True,
-    title="Evolução da Receita por Ano Fiscal",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Revenue": f"Receita ({latest_record['Currency']} {latest_record['Unit']})"
-    },
-    custom_data=["Revenue"]
-)
+    # Gráfico da evolução da receita
+    st.subheader("Evolução da Receita")
 
-revenue_chart.update_traces(
-    line=dict(width=3),
-    marker=dict(size=9),
-    hovertemplate=(
-        "<b>Ano Fiscal:</b> %{x}<br>"
-        "<b>Receita:</b> %{y:,.2f}<br>"
-        "<extra></extra>"
+    revenue_chart = px.line(
+        df,
+        x="Fiscal Year",
+        y="Revenue",
+        markers=True,
+        title="Evolução da Receita por Ano Fiscal",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Revenue": f"Receita ({latest_record['Currency']} {latest_record['Unit']})"
+        },
+        custom_data=["Revenue"]
     )
-)
 
-revenue_chart.update_layout(
-    template="plotly_dark",
-    height=450,
-    font=dict(
-        family="Arial",
-        size=12
-    ),
-    title=dict(
-        x=0.5,
-        xanchor="center",
-        font=dict(size=18)
-    ),
-    xaxis=dict(
-        title="Ano Fiscal",
-        tickmode="linear",
-        dtick=1,
-        showgrid=False,
-        zeroline=False
-    ),
-    yaxis=dict(
-        title=f"Receita ({latest_record['Currency']} {latest_record['Unit']})",
-        tickformat=",.0f",
-        showgrid=True,
-        zeroline=False
-    ),
-    margin=dict(
-        l=60,
-        r=30,
-        t=70,
-        b=50
+    revenue_chart.update_traces(
+        line=dict(width=3),
+        marker=dict(size=9),
+        hovertemplate=(
+            "<b>Ano Fiscal:</b> %{x}<br>"
+            "<b>Receita:</b> %{y:,.2f}<br>"
+            "<extra></extra>"
+        )
     )
-)
 
-
-st.plotly_chart(
-    revenue_chart,
-    use_container_width=True
-)
-
-# Gráfico da evolução das margens
-st.subheader("Evolução das Margens")
-
-margin_df = df.melt(
-    id_vars=["Fiscal Year"],
-    value_vars=["Operating Margin (%)", "Net Profit Margin (%)"],
-    var_name="Indicator",
-    value_name="Percentage"
-)
-
-margin_df["Indicator"] = margin_df["Indicator"].replace({
-    "Operating Margin (%)": "Margem Operacional",
-    "Net Profit Margin (%)": "Margem de Lucro Líquida"
-})
-
-margin_chart = px.line(
-    margin_df,
-    x="Fiscal Year",
-    y="Percentage",
-    color="Indicator",
-    markers=True,
-    title="Evolução das Margens por Ano Fiscal",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Percentage": "Margem (%)",
-        "Indicator": "Indicador"
-    },
-    color_discrete_map={
-        "Margem Operacional": "#60A5FA",
-        "Margem de Lucro Líquida": "#F59E0B"
-    }
-)
-
-margin_chart.update_traces(
-    line=dict(width=3),
-    marker=dict(size=9),
-    hovertemplate=(
-        "<b>Ano Fiscal:</b> %{x}<br>"
-        "<b>Margem:</b> %{y:.2f}%"
-        "<extra>%{fullData.name}</extra>"
+    revenue_chart.update_layout(
+        template="plotly_dark",
+        height=450,
+        font=dict(
+            family="Arial",
+            size=12
+        ),
+        title=dict(
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18)
+        ),
+        xaxis=dict(
+            title="Ano Fiscal",
+            tickmode="linear",
+            dtick=1,
+            showgrid=False,
+            zeroline=False
+        ),
+        yaxis=dict(
+            title=f"Receita ({latest_record['Currency']} {latest_record['Unit']})",
+            tickformat=",.0f",
+            showgrid=True,
+            zeroline=False
+        ),
+        margin=dict(
+            l=60,
+            r=30,
+            t=70,
+            b=50
+        )
     )
-)
 
-margin_chart.update_layout(
-    template="plotly_dark",
-    height=450,
-    font=dict(family="Arial", size=12),
-    title=dict(
-        x=0.5,
-        xanchor="center",
-        font=dict(size=18)
-    ),
-    xaxis=dict(
-        title="Ano Fiscal",
-        tickmode="linear",
-        dtick=1,
-        showgrid=False,
-        zeroline=False
-    ),
-    yaxis=dict(
-        title="Margem (%)",
-        ticksuffix="%",
-        showgrid=True,
-        zeroline=False
-    ),
-    legend=dict(
-        title="Indicador",
-        orientation="h",
-        y=-0.2,
-        x=0.5,
-        xanchor="center"
-    ),
-    margin=dict(l=60, r=30, t=70, b=70)
-)
+    st.plotly_chart(
+        revenue_chart,
+        use_container_width=True
+    )
 
-st.plotly_chart(margin_chart, use_container_width=True)
+    # Gráfico da evolução dos resultados financeiros
+
+    st.subheader("Evolução dos Resultados Financeiros")
+
+    results_df = df.melt(
+        id_vars=["Fiscal Year"],
+        value_vars=["Operating Income", "Net Income"],
+        var_name="Indicator",
+        value_name="Value"
+    )
+
+    results_df["Indicator"] = results_df["Indicator"].replace({
+        "Operating Income": "Resultado Operacional",
+        "Net Income": "Resultado Líquido"
+    })
+
+    results_chart = px.line(
+        results_df,
+        x="Fiscal Year",
+        y="Value",
+        color="Indicator",
+        markers=True,
+        title="Evolução dos Resultados por Ano Fiscal",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Value": f"Valor ({latest_record['Currency']} {latest_record['Unit']})",
+            "Indicator": "Indicator"
+        },
+        color_discrete_map={
+            "Resultado Operacional": "#60A5FA",
+            "Resultado Líquido": "#F59E0B"
+        }
+    )
+
+    results_chart.update_traces(
+        line=dict(width=3),
+        marker=dict(size=9),
+        hovertemplate=(
+            "<b>Ano Fiscal:</b> %{x}<br>"
+            "<b>Valor:</b> %{y:,.2f}"
+            "<extra>%{fullData.name}</extra>"
+        )
+    )
+
+    results_chart.update_layout(
+        template="plotly_dark",
+        height=450,
+        font=dict(family="Arial", size=12),
+        title=dict(
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18)
+        ),
+        xaxis=dict(
+            title="Ano Fiscal",
+            tickmode="linear",
+            dtick=1,
+            showgrid=False,
+            zeroline=False
+        ),
+        yaxis=dict(
+            title=f"Valor ({latest_record['Currency']} {latest_record['Unit']})",
+            tickformat=",.0f",
+            showgrid=True,
+            zeroline=False
+        ),
+        legend=dict(
+            title="Indicador",
+            orientation="h",
+            y=-0.2,
+            x=0.5,
+            xanchor="center"
+        ),
+        margin=dict(l=60, r=30, t=70, b=70)
+    )
+
+    st.plotly_chart(
+        results_chart,
+        use_container_width=True
+    )
+
+    # Gráfico da evolução das margens
+    st.subheader("Evolução das Margens")
+
+    margin_df = df.melt(
+        id_vars=["Fiscal Year"],
+        value_vars=[
+            "Operating Margin (%)",
+            "Net Profit Margin (%)",
+            "Revenue Growth (%)"
+        ],
+        var_name="Indicator",
+        value_name="Percentage"
+    )
+
+    margin_df["Indicator"] = margin_df["Indicator"].replace({
+        "Operating Margin (%)": "Margem Operacional",
+        "Net Profit Margin (%)": "Margem de Lucro Líquida",
+        "Revenue Growth (%)": "Crescimento da Receita"
+    })
+
+    margin_chart = px.line(
+        margin_df,
+        x="Fiscal Year",
+        y="Percentage",
+        color="Indicator",
+        markers=True,
+        title="Evolução das Margens por Ano Fiscal",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Percentage": "Margem (%)",
+            "Indicator": "Indicador"
+        },
+        color_discrete_map={
+            "Margem Operacional": "#60A5FA",
+            "Margem de Lucro Líquida": "#F59E0B",
+            "Crescimento da Receita": "#34D399"
+        }
+    )
+
+    margin_chart.update_traces(
+        line=dict(width=3),
+        marker=dict(size=9),
+        hovertemplate=(
+            "<b>Ano Fiscal:</b> %{x}<br>"
+            "<b>Margem:</b> %{y:.2f}%"
+            "<extra>%{fullData.name}</extra>"
+        )
+    )
+
+    margin_chart.update_layout(
+        template="plotly_dark",
+        height=450,
+        font=dict(family="Arial", size=12),
+        title=dict(
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18)
+        ),
+        xaxis=dict(
+            title="Ano Fiscal",
+            tickmode="linear",
+            dtick=1,
+            showgrid=False,
+            zeroline=False
+        ),
+        yaxis=dict(
+            title="Margem (%)",
+            ticksuffix="%",
+            showgrid=True,
+            zeroline=False
+        ),
+        legend=dict(
+            title="Indicador",
+            orientation="h",
+            y=-0.2,
+            x=0.5,
+            xanchor="center"
+        ),
+        margin=dict(l=60, r=30, t=70, b=70)
+    )
+
+    st.plotly_chart(margin_chart, use_container_width=True)
+
+else:
+    st.info(
+        "Não existem dados financeiros suficientes para "
+        "apresentr os gráficos de evolução. "
+        "São necessários, pelo menos, dois anos fiscais."
+    )
