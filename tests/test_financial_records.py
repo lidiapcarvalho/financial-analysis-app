@@ -36,29 +36,27 @@ def test_get_all_financial_records_returns_registered_records(tmp_path):
     database_path = tmp_path / "test_financial_records.db"
     initialize_database(database_path)
 
-    company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
-    )
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     with get_connection(database_path) as connection:
         connection.execute(
             """
             INSERT INTO financial_record (
-                company_id, fiscal_year, revenue, operating_income,
-                net_income, total_assets, total_liabilities, equity
+                company_id, fiscal_year, period_end, currency, unit, revenue, operating_income,
+                net_income, total_assets, total_liabilities, equity, equity_attributable_to_owners
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (company_id, 2025, 1000.0, 250.0, 150.0,
-             2000.0, 1200.0, 800.0)
+            (company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+             2000.0, 1200.0, 800.0, 700.0)
         )
 
     financial_records = get_all_financial_records(database_path)
 
     assert len(financial_records) == 1
     assert financial_records[0][1:] == (
-        "LVMH", "EUR", 2025,
-        1000.0, 250.0, 150.0, 2000.0, 1200.0, 800.0
+        "LVMH", 2025, "2025-12-31", "EUR", "millions",
+        1000.0, 250.0, 150.0, 2000.0, 1200.0, 800.0, 700.0
     )
 
 # Teste 3: Testa a criação de um registo financeiro
@@ -71,20 +69,20 @@ def test_add_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+        2000.0, 1200.0, 800.0, 700.0, database_path
     )
 
     financial_records = get_all_financial_records(database_path)
 
     assert record_id == 1
     assert len(financial_records) == 1
-    assert financial_records[0][3] == 2025
-    assert financial_records[0][4] == 1000.0
+    assert financial_records[0][2] == 2025
+    assert financial_records[0][6] == 1000.0
 
 
 # Teste 4: Testa a atualização dos dados de um registo financeiro
@@ -96,25 +94,25 @@ def test_update_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+        2000.0, 1200.0, 800.0, 700.0, database_path
     )
 
     update_financial_record(
-        record_id, 2026, 1200.0, 300.0, 180.0,
-        2200.0, 1300.0, 900.0, database_path
+        record_id, 2026, "2026-12-31", "EUR", "millions", 1200.0, 300.0, 180.0,
+        2200.0, 1300.0, 900.0, 800.0, database_path
     )
 
     financial_records = get_all_financial_records(database_path)
 
     assert len(financial_records) == 1
     assert financial_records[0] == (
-        record_id, "LVMH", "EUR", 2026,
-        1200.0, 300.0, 180.0, 2200.0, 1300.0, 900.0
+        record_id, "LVMH", 2026, "2026-12-31", "EUR", "millions",
+        1200.0, 300.0, 180.0, 2200.0, 1300.0, 900.0, 800.0
     )
 
 # Teste 5: Testa a eliminação de um registo financeiro
@@ -127,12 +125,12 @@ def test_delete_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", "EUR", database_path
+        "LVMH", "Luxury", database_path
     )
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+        2000.0, 1200.0, 800.0, 700.0, database_path
     )
 
     row_delected = delete_financial_record(
@@ -251,12 +249,12 @@ def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", "EUR", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     with pytest.raises(ValueError):
         add_financial_record(
-            company_id, fiscal_year, 1000.0, 250.0, 150.0,
-            2000.0, 1200.0, 800.0, database_path
+            company_id, fiscal_year, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+            2000.0, 1200.0, 800.0, 700.0, database_path
         )
 
     assert get_all_financial_records(database_path) == []
@@ -273,6 +271,7 @@ def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
         {"total_assets": -100},
         {"total_liabilities": float("inf")},
         {"equity": "800"},
+        {"equity_attributable_to_owners": "700"},
     ]
 )
 def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
@@ -281,7 +280,7 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", "EUR", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     financial_values = {
         "revenue": 1000.0,
@@ -290,6 +289,7 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
         "total_assets": 2000.0,
         "total_liabilities": 1200.0,
         "equity": 800.0,
+        "equity_attributable_to_owners": 700.0
     }
 
     financial_values.update(field_values)
@@ -298,12 +298,16 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
         add_financial_record(
             company_id,
             2025,
+            "2025-12-31",
+            "EUR",
+            "million,",
             financial_values["revenue"],
             financial_values["operating_income"],
             financial_values["net_income"],
             financial_values["total_assets"],
             financial_values["total_liabilities"],
             financial_values["equity"],
+            financial_values["equity_attributable_to_owners"],
             database_path,
         )
 
@@ -318,20 +322,20 @@ def test_add_financial_record_accepts_negative_values(tmp_path):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", "EUR", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, -250.0, -150.0,
-        2000.0, 1200.0, -800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, -250.0, -150.0,
+        2000.0, 1200.0, -800.0, 700.0, database_path
     )
 
     assert record_id is not None
 
     records = get_all_financial_records(database_path)
     assert len(records) == 1
-    assert records[0][5] == -250.0
-    assert records[0][6] == -150.0
-    assert records[0][9] == -800.0
+    assert records[0][7] == -250.0
+    assert records[0][8] == -150.0
+    assert records[0][11] == -800.0
 
 # Teste 12: Rejeição de anos fiscais inválidos na atualização de registos
 
@@ -346,22 +350,22 @@ def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", "EUR", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+        2000.0, 1200.0, 800.0, 700.0, database_path
     )
 
     with pytest.raises(ValueError):
         update_financial_record(
-            record_id, fiscal_year, 1000.0, 250.0, 150.0,
-            2000.0, 1200.0, 800.0, database_path
+            record_id, fiscal_year, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+            2000.0, 1200.0, 800.0, 700.0, database_path
         )
 
     records = get_all_financial_records(database_path)
     assert len(records) == 1
-    assert records[0][3] == 2025
+    assert records[0][2] == 2025
 
 # Teste 13: Testa a rejeição de valores financeiros inválidos na atualização de registos
 
@@ -383,11 +387,11 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", "EUR", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path)
 
     record_id = add_financial_record(
-        company_id, 2025, 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
+        2000.0, 1200.0, 800.0, 700.0, database_path
     )
 
     financial_values = {
@@ -397,6 +401,7 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
         "total_assets": 2000.0,
         "total_liabilities": 1200.0,
         "equity": 800.0,
+        "equity_attributable_to_owners": 700.0
     }
 
     financial_values.update(field_values)
@@ -405,20 +410,24 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
         update_financial_record(
             record_id,
             2025,
+            "2025-12-31",
+            "EUR",
+            "millions",
             financial_values["revenue"],
             financial_values["operating_income"],
             financial_values["net_income"],
             financial_values["total_assets"],
             financial_values["total_liabilities"],
             financial_values["equity"],
+            financial_values["equity_attributable_to_owners"],
             database_path,
         )
 
     records = get_all_financial_records(database_path)
     assert len(records) == 1
-    assert records[0][5] == 250.0
-    assert records[0][6] == 150.0
-    assert records[0][9] == 800.0
+    assert records[0][7] == 250.0
+    assert records[0][8] == 150.0
+    assert records[0][11] == 800.0
 
 
 # Teste 14: Rejeição de registos financeiros duplicados na criação
@@ -428,12 +437,12 @@ def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury Goods", "EUR", database_path
+        "LVMH", "Luxury Goods", database_path
     )
 
     add_financial_record(
-        company_id, 2025, 80000, 15000, 10000,
-        120000, 50000, 70000, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 80000, 15000, 10000,
+        120000, 50000, 70000, 60000, database_path
     )
 
     with pytest.raises(
@@ -441,8 +450,8 @@ def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
         match="Já existe um registo financeiro para esta empresa e ano fiscal."
     ):
         add_financial_record(
-            company_id, 2025, 90000, 16000, 11000,
-            130000, 55000, 75000, database_path
+            company_id, 2025, "2025-12-31", "EUR", "millions", 90000, 16000, 11000,
+            130000, 55000, 75000, 65000, database_path
         )
 
     records = get_all_financial_records(database_path)
@@ -456,17 +465,17 @@ def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury Goods", "EUR", database_path
+        "LVMH", "Luxury Goods", database_path
     )
 
     first_record_id = add_financial_record(
-        company_id, 2024, 80000, 15000, 10000,
-        120000, 50000, 70000, database_path
+        company_id, 2024, 2024-12-31, "EUR", "millions", 80000, 15000, 10000,
+        120000, 50000, 70000, 60000, database_path
     )
 
     add_financial_record(
-        company_id, 2025, 90000, 16000, 11000,
-        130000, 55000, 75000, database_path
+        company_id, 2025, "2025-12-31", "EUR", "millions", 90000, 16000, 11000,
+        130000, 55000, 75000, 65000, database_path
     )
 
     with pytest.raises(
@@ -474,12 +483,12 @@ def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
         match="Já existe um registo financeiro para esta empresa e ano fiscal."
     ):
         update_financial_record(
-            first_record_id, 2025, 85000, 15500, 10500,
-            125000, 52000, 73000, database_path
+            first_record_id, 2025, "2025-12-31", "EUR", "millions", 85000, 15500, 10500,
+            125000, 52000, 73000, 63000, database_path
         )
 
     records = get_all_financial_records(database_path)
 
     assert len(records) == 2
-    assert records[0][3] == 2025
-    assert records[1][3] == 2024
+    assert records[0][2] == 2025
+    assert records[1][2] == 2024

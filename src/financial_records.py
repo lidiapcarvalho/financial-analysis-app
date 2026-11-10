@@ -13,14 +13,17 @@ def get_all_financial_records(database_path=None):
                 SELECT
                     fr.id,
                     c.name,
-                    c.currency,
                     fr.fiscal_year,
+                    fr.period_end,
+                    fr.currency,
+                    fr.unit,
                     fr.revenue,
                     fr.operating_income,
                     fr.net_income,
                     fr.total_assets,
                     fr.total_liabilities,
-                    fr.equity
+                    fr.equity,
+                    fr.equity_attributable_to_owners
                 FROM financial_record AS fr
                 INNER JOIN company AS c
                     ON fr.company_id = c.id
@@ -61,7 +64,20 @@ def _validate_numeric_value(value, field_name):
         raise ValueError(f"{field_name} tem de ser um número finito.")
 
 
-def add_financial_record(company_id, fiscal_year, revenue, operating_income, net_income, total_assets, total_liabilities, equity, database_path=None):
+def add_financial_record(
+        company_id,
+        fiscal_year,
+        period_end,
+        currency,
+        unit,
+        revenue,
+        operating_income,
+        net_income,
+        total_assets,
+        total_liabilities,
+        equity,
+        equity_attributable_to_owners,
+        database_path=None):
     """Regista um novo registo financeiro associado a uma empresa."""
     _validate_fiscal_year(fiscal_year)
 
@@ -71,17 +87,32 @@ def add_financial_record(company_id, fiscal_year, revenue, operating_income, net
     _validate_non_negative_value(total_assets, "total_assets")
     _validate_non_negative_value(total_liabilities, "total_liabilities")
     _validate_numeric_value(equity, "equity")
+    _validate_numeric_value(equity_attributable_to_owners,
+                            "equity_attributable_to_owners")
 
     with get_connection(database_path) as connection:
         try:
             cursor = connection.execute(
                 """
-                INSERT INTO financial_record (company_id, fiscal_year, revenue, operating_income, net_income, total_assets, total_liabilities, equity)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO financial_record (
+                    company_id, 
+                    fiscal_year, 
+                    period_end, 
+                    currency, 
+                    unit, 
+                    revenue, 
+                    operating_income, 
+                    net_income, 
+                    total_assets, 
+                    total_liabilities, 
+                    equity, 
+                    equity_attributable_to_owners
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    company_id, fiscal_year, revenue, operating_income,
-                    net_income, total_assets, total_liabilities, equity
+                    company_id, fiscal_year, period_end, currency, unit, revenue, operating_income,
+                    net_income, total_assets, total_liabilities, equity, equity_attributable_to_owners
                 )
             )
         except sqlite3.IntegrityError as error:
@@ -98,8 +129,8 @@ def add_financial_record(company_id, fiscal_year, revenue, operating_income, net
 
 
 def update_financial_record(
-    record_id, fiscal_year, revenue, operating_income,
-    net_income, total_assets, total_liabilities, equity,
+    record_id, fiscal_year, period_end, currency, unit, revenue, operating_income,
+    net_income, total_assets, total_liabilities, equity, equity_attributable_to_owners,
     database_path=None
 ):
     """Atualiza os dados deum registo financeiro existente."""
@@ -111,25 +142,30 @@ def update_financial_record(
     _validate_non_negative_value(total_assets, "total_assets")
     _validate_non_negative_value(total_liabilities, "total_liabilities")
     _validate_numeric_value(equity, "equity")
+    _validate_numeric_value(equity_attributable_to_owners,
+                            "equity_attributable_to_owners")
 
     with get_connection(database_path) as connection:
         try:
             cursor = connection.execute(
                 """
                 UPDATE financial_record
-                SET fiscal_year = ?, 
+                SET fiscal_year = ?,
+                    period_end = ?,
+                    currency = ?,
+                    unit = ?,
                     revenue = ?, 
                     operating_income = ?, 
                     net_income = ?, 
                     total_assets = ?, 
                     total_liabilities = ?, 
-                    equity = ?
+                    equity = ?,
+                    equity_attributable_to_owners = ?
                 WHERE id = ?
                 """,
                 (
-                    fiscal_year, revenue, operating_income,
-                    net_income, total_assets, total_liabilities,
-                    equity, record_id
+                    fiscal_year, period_end, currency, unit, revenue, operating_income,
+                    net_income, total_assets, total_liabilities, equity, equity_attributable_to_owners, record_id
                 )
             )
         except sqlite3.IntegrityError as error:
