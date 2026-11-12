@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 from src.database import initialize_database
 from src.companies import get_all_companies
@@ -131,14 +132,24 @@ if not financial_records:
         "para as empresas selecionadas."
     )
 else:
+    financial_data_columns = [
+        "Company",
+        "Fiscal Year",
+        "Currency",
+        "Unit",
+        "Revenue",
+        "Operating Income",
+        "Net Income",
+        "Total Assets",
+        "Equity"
+    ]
+
     st.dataframe(
-        df,
+        df[financial_data_columns],
         use_container_width=True,
         hide_index=True
     )
 
-
-st.subheader("Comparação dos Indicadores")
 
 st.subheader("Comparação dos Indicadores")
 
@@ -179,9 +190,77 @@ else:
 
 st.subheader("Evolução do Desempenho Financeiro")
 
-st.info(
-    "Os gráficos comparativos serão desenvolvidos depois "
-    "da conclusão dos gráficos da análise financeira individual."
+if not df.empty:
+
+    revenue_chart = px.line(
+        df,
+        x="Fiscal Year",
+        y="Revenue",
+        color="Company",
+        markers=True,
+        facet_col="Currency",
+        title="Evolução da Receita por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Revenue": "Receita",
+            "Company": "Empresa",
+            "Currency": "Moeda"
+        }
+    )
+
+    st.plotly_chart(
+        revenue_chart,
+        use_container_width=True
+    )
+
+st.divider()
+
+st.subheader("Evolução do Resultado Operacional")
+
+operating_income_chart = px.line(
+    df,
+    x="Fiscal Year",
+    y="Operating Income",
+    color="Company",
+    markers=True,
+    facet_col="Currency",
+    title="Evolução do Resultado Operacional",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "Operating Income": "Resultado Operacional",
+        "Company": "Empresa",
+        "Currency": "Moeda"
+    }
+)
+
+st.plotly_chart(
+    operating_income_chart,
+    use_container_width=True
+)
+
+st.divider()
+
+st.subheader("Evolução do Resultado Líquido")
+
+net_income_chart = px.line(
+    df,
+    x="Fiscal Year",
+    y="Net Income",
+    color="Company",
+    markers=True,
+    facet_col="Currency",
+    title="Evolução do Resultado Líquido por Empresa",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "Net Income": "Resultado Líquido",
+        "Company": "Empresa",
+        "Currency": "Moeda"
+    }
+)
+
+st.plotly_chart(
+    net_income_chart,
+    use_container_width=True
 )
 
 st.divider()
