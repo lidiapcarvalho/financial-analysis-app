@@ -3,6 +3,7 @@ import sqlite3
 
 from src.financial_records import (
     get_all_financial_records,
+    get_financial_records_by_companies,
     add_financial_record,
     update_financial_record,
     delete_financial_record,
@@ -492,3 +493,47 @@ def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
     assert len(records) == 2
     assert records[0][2] == 2025
     assert records[1][2] == 2024
+
+# Teste 16: Consulta dos registos das empresas selecionadas
+
+
+def test_get_financial_records_by_companies_returns_selected_records(tmp_path):
+    """Testa a consulta dos registos das empresas selecionadas."""
+
+    database_path = tmp_path / "test_financial_records.db"
+    initialize_database(database_path)
+
+    lvmh_id = add_company("LVMH", "Luxury", database_path)
+    kering_id = add_company("Kering", "Luxury", database_path)
+    add_company("Richemont", "Luxury", database_path)
+
+    with get_connection(database_path) as connection:
+        connection.executemany(
+            """
+            INSERT INTO financial_record (
+                company_id, fiscal_year, period_end, currency, unit,
+                revenue, operating_income, net_income, total_assets,
+                total_liabilities, equity, equity_attributable_to_owners
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (lvmh_id, 2025, "2025-12-31", "EUR", "millions",
+                 1000.0, 250.0, 150.0, 2000.0, 1200.0, 800.0, 700.0),
+                (kering_id, 2025, "2025-12-31", "EUR", "millions",
+                 800.0, 200.0, 120.0, 1500.0, 900.0, 600.0, 500.0)
+            ]
+        )
+
+    financial_records = get_financial_records_by_companies(
+        [lvmh_id, kering_id],
+        database_path
+    )
+
+    assert len(financial_records) == 2
+    assert {record[1] for record in financial_records} == {
+        lvmh_id, kering_id
+    }
+    assert {record[2] for record in financial_records} == {
+        "LVMH", "Kering"
+    }

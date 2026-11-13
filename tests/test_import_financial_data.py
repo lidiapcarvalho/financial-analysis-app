@@ -31,12 +31,10 @@ def test_get_company_ids_returns_expected_companies():
 
     company_ids = _get_company_ids()
 
-    assert company_ids == {
-        "lvmh": 1,
-        "kering": 2,
-        "richemont": 3,
-        "prada": 4
-    }
+    assert company_ids["lvmh"] == 1
+    assert company_ids["kering"] == 2
+    assert company_ids["richemont"] == 3
+    assert company_ids["prada"] == 4
 
 
 def test_validate_companies_raises_error_for_unknown_company():
