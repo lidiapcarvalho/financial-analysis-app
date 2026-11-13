@@ -59,6 +59,7 @@ for record in financial_records:
     company_id = record[1]
     company_name = record[2]
     fiscal_year = record[3]
+    period_end = record[4]
     revenue = record[7]
     operating_income = record[8]
     net_income = record[9]
@@ -106,6 +107,7 @@ for record in financial_records:
     analysis_records.append({
         "Company": company_name,
         "Fiscal Year": fiscal_year,
+        "Period End": period_end,
         "Currency": record[5],
         "Unit": record[6],
         "Revenue": revenue,
@@ -122,6 +124,45 @@ for record in financial_records:
 
 df = pd.DataFrame(analysis_records)
 
+companies_with_data = df["Company"].unique()
+
+companies_without_data = [
+    company
+    for company in selected_companies
+    if company not in companies_with_data
+]
+
+if companies_without_data:
+    st.warning(
+        "Não existem registos financeiros para: "
+        + ", ".join(companies_without_data)
+    )
+
+if not df.empty:
+    all_companies = pd.DataFrame({
+        "Company": selected_companies
+    })
+
+    available_year = sorted(df["Fiscal Year"].unique())
+
+    complete_combinations = (
+        all_companies.assign(key=1)
+        .merge(
+            pd.DataFrame({
+                "Fiscal Year": available_year,
+                "key": 1
+            }),
+            on="key"
+        )
+        .drop(columns="key")
+    )
+
+    df = complete_combinations.merge(
+        df,
+        on=["Company", "Fiscal Year"],
+        how="left"
+    )
+
 st.divider()
 
 st.subheader("Comparação dos Dados Financeiros")
@@ -135,6 +176,7 @@ else:
     financial_data_columns = [
         "Company",
         "Fiscal Year",
+        "Period End",
         "Currency",
         "Unit",
         "Revenue",
@@ -175,6 +217,20 @@ else:
             df["Fiscal Year"] == fiscal_year
         ]
 
+        year_records = year_records.copy()
+
+        period_end_labels = (
+            pd.to_datetime(year_records["Period End"])
+            .dt.strftime("%d/%m/%Y")
+        )
+
+        year_records["Company"] = (
+            year_records["Company"]
+            + period_end_labels.map(
+                lambda date: f" ({date})" if pd.notna(date) else ""
+            )
+        )
+
         indicator_table = (
             year_records
             .set_index("Company")[indicator_columns]
@@ -192,74 +248,225 @@ st.subheader("Evolução do Desempenho Financeiro")
 
 if not df.empty:
 
-    revenue_chart = px.line(
-        df,
-        x="Fiscal Year",
-        y="Revenue",
-        color="Company",
-        markers=True,
-        facet_col="Currency",
-        title="Evolução da Receita por Empresa",
-        labels={
-            "Fiscal Year": "Ano Fiscal",
-            "Revenue": "Receita",
-            "Company": "Empresa",
-            "Currency": "Moeda"
-        }
-    )
+    currencies = df["Currency"].dropna().unique()
 
-    st.plotly_chart(
-        revenue_chart,
-        use_container_width=True
-    )
+    columns = st.columns(len(currencies))
+
+    for column, currency in zip(columns, currencies):
+
+        currency_data = df[df["Currency"] == currency]
+
+        revenue_chart = px.line(
+            currency_data,
+            x="Fiscal Year",
+            y="Revenue",
+            color="Company",
+            markers=True,
+            title=f"Evolução da Receita ({currency})",
+            labels={
+                "Fiscal Year": "Ano Fiscal",
+                "Revenue": "Receita",
+                "Company": "Empresa",
+            }
+        )
+
+        with column:
+
+            st.plotly_chart(
+                revenue_chart,
+                use_container_width=True
+            )
 
 st.divider()
 
 st.subheader("Evolução do Resultado Operacional")
 
-operating_income_chart = px.line(
-    df,
-    x="Fiscal Year",
-    y="Operating Income",
-    color="Company",
-    markers=True,
-    facet_col="Currency",
-    title="Evolução do Resultado Operacional",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Operating Income": "Resultado Operacional",
-        "Company": "Empresa",
-        "Currency": "Moeda"
-    }
-)
+if not df.empty:
 
-st.plotly_chart(
-    operating_income_chart,
-    use_container_width=True
-)
+    currencies = df["Currency"].dropna().unique()
+
+    columns = st.columns(len(currencies))
+
+    for column, currency in zip(columns, currencies):
+
+        currency_data = df[df["Currency"] == currency]
+
+        operating_income_chart = px.line(
+            currency_data,
+            x="Fiscal Year",
+            y="Operating Income",
+            color="Company",
+            markers=True,
+            title=f"Evolução do Resultado Operacional ({currency})",
+            labels={
+                "Fiscal Year": "Ano Fiscal",
+                "Operating Income": "Resultado Operacional",
+                "Company": "Empresa"
+            }
+        )
+
+        with column:
+            st.plotly_chart(
+                operating_income_chart,
+                use_container_width=True
+            )
 
 st.divider()
 
 st.subheader("Evolução do Resultado Líquido")
 
-net_income_chart = px.line(
-    df,
+if not df.empty:
+
+    currencies = df["Currency"].dropna().unique()
+
+    columns = st.columns(len(currencies))
+
+    for column, currency in zip(columns, currencies):
+
+        currency_data = df[df["Currency"] == currency]
+
+        net_income_chart = px.line(
+            currency_data,
+            x="Fiscal Year",
+            y="Net Income",
+            color="Company",
+            markers=True,
+            title=f"Evolução do Resultado Líquido ({currency})",
+            labels={
+                "Fiscal Year": "Ano Fiscal",
+                "Net Income": "Resultado Líquido",
+                "Company": "Empresa"
+            }
+        )
+
+        with column:
+            st.plotly_chart(
+                net_income_chart,
+                use_container_width=True
+            )
+
+st.divider()
+
+st.subheader("Evolução da Margem Operacional")
+
+indicator_table = df.dropna(subset=["Operating Margin (%)"])
+
+operating_margin_chart = px.line(
+    indicator_table,
     x="Fiscal Year",
-    y="Net Income",
+    y="Operating Margin (%)",
     color="Company",
     markers=True,
-    facet_col="Currency",
-    title="Evolução do Resultado Líquido por Empresa",
+    title="Evolução da Margem Operacional por Empresa",
     labels={
         "Fiscal Year": "Ano Fiscal",
-        "Net Income": "Resultado Líquido",
-        "Company": "Empresa",
-        "Currency": "Moeda"
+        "Operating Margin (%)": "Margem Operacional (%)",
+        "Company": "Empresa"
     }
 )
 
 st.plotly_chart(
-    net_income_chart,
+    operating_margin_chart,
+    use_container_width=True
+)
+
+st.divider()
+
+st.subheader("Evolução da Margem do Lucro Líquida")
+
+indicator_table = df.dropna(subset=["Net Profit Margin (%)"])
+
+net_profit_margin_chart = px.line(
+    indicator_table,
+    x="Fiscal Year",
+    y="Net Profit Margin (%)",
+    color="Company",
+    markers=True,
+    title="Evolução da Margem do Lucro Líquida por Empresa",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "Net Profti Margin (%)": "Margem de Lucro Líquida (%)",
+        "Company": "Empresa"
+    }
+)
+
+st.plotly_chart(
+    net_profit_margin_chart,
+    use_container_width=True
+)
+
+st.divider()
+
+st.subheader("Evolução da Taxa de Crescimento da Receita")
+
+indicator_table = df.dropna(subset=["Revenue Growth (%)"])
+
+revenue_growth_chart = px.line(
+    indicator_table,
+    x="Fiscal Year",
+    y="Revenue Growth (%)",
+    color="Company",
+    markers=True,
+    title="Evolução da Taxa de Crescimento da Receita por Empresa",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "Revenue Growth (%)": "Taxa de Crescimento da Receita (%)",
+        "Company": "Empresa"
+    }
+)
+
+st.plotly_chart(
+    revenue_growth_chart,
+    use_container_width=True
+)
+
+st.divider()
+
+st.subheader("Evolução do ROA")
+
+indicator_table = df.dropna(subset=["ROA (%)"])
+
+roa_chart = px.line(
+    indicator_table,
+    x="Fiscal Year",
+    y="ROA (%)",
+    color="Company",
+    markers=True,
+    title="Evolução do ROA (%)",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "ROA (%)": "Rendibilidade do Ativo (%)",
+        "Company": "Empresa"
+    }
+)
+
+st.plotly_chart(
+    roa_chart,
+    use_container_width=True
+)
+
+st.divider()
+
+st.subheader("Evolução do ROE")
+
+indicator_table = df.dropna(subset=["ROE (%)"])
+
+roe_chart = px.line(
+    indicator_table,
+    x="Fiscal Year",
+    y="ROE (%)",
+    color="Company",
+    markers=True,
+    title="Evolução do ROE (%)",
+    labels={
+        "Fiscal Year": "Ano Fiscal",
+        "ROE (%)": "Rendibilidade dos Capitais Próprios (%)",
+        "Company": "Empresa"
+    }
+)
+
+st.plotly_chart(
+    roe_chart,
     use_container_width=True
 )
 
