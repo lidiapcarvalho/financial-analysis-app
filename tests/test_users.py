@@ -36,7 +36,7 @@ def test_create_user_successfully(test_database):
         user = connection.execute(
             """
             SELECT username, email, password_hash
-            FROM app_user
+            FROM user
             WHERE username = ?
             """,
             ("test_user",)

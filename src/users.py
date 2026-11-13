@@ -60,7 +60,7 @@ def create_user(username, email, password):
             username_exists = connection.execute(
                 """
                 SELECT 1
-                FROM app_user
+                FROM user
                 WHERE username = ?
                 LIMIT 1
                 """,
@@ -74,7 +74,7 @@ def create_user(username, email, password):
             email_exists = connection.execute(
                 """
                 SELECT 1
-                FROM app_user
+                FROM user
                 WHERE email = ?
                 LIMIT 1
                 """,
@@ -90,7 +90,7 @@ def create_user(username, email, password):
             # Guarda o novo utilizador
             connection.execute(
                 """
-                INSERT INTO app_user (
+                INSERT INTO user (
                     username,
                     email,
                     password_hash

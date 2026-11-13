@@ -132,7 +132,7 @@ def initialize_database(database_path=DATABASE_PATH):
         """)
 
         connection.execute("""
-            CREATE TABLE IF NOT EXISTS app_user (
+            CREATE TABLE IF NOT EXISTS user (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 email TEXT NOT NULL UNIQUE COLLATE NOCASE,
