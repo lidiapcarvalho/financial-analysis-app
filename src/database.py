@@ -131,6 +131,16 @@ def initialize_database(database_path=DATABASE_PATH):
             )
         """)
 
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS app_user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
 
 if __name__ == "__main__":
     initialize_database()
