@@ -3,7 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from src.database import initialize_database, get_connection
+from src.database import (
+    initialize_database,
+    get_connection,
+    migrate_database
+)
 from src.companies import add_company, get_all_companies
 
 # Teste 1: Verifica se as tabelas principais existem na base de dados do projeto
@@ -181,3 +185,76 @@ def test_initialize_database_creates_missing_directory(tmp_path):
 
     assert database_path.parent.exists()
     assert database_path.exists()
+
+
+# Teste 7: Verifica se uma nova base de dados é criada na versão 3
+# e contém a coluna notes
+
+def test_new_database_has_version_3_and_notes(tmp_path):
+
+    database_path = tmp_path / "test_version_3.db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        version = connection.execute(
+            "PRAGMA user_version"
+        ).fetchone()[0]
+
+        columns = [
+            column[1]
+            for column in connection.execute(
+                "PRAGMA table_info(saved_comparison)"
+            ).fetchall()
+        ]
+
+    assert version == 3
+    assert "notes" in columns
+
+
+# Teste 8: Verifica se uma base de dados v2 é migrada para v3
+
+def test_migrate_database_v2_to_v3(tmp_path):
+
+    database_path = tmp_path / "test_migration.db"
+
+    # Cria uma estrutura simplificada da versão 2
+    with sqlite3.connect(database_path) as connection:
+
+        connection.execute("""
+            CREATE TABLE company (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                sector TEXT NOT NULL
+            )
+        """)
+
+        connection.execute("""
+            CREATE TABLE saved_comparison (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        connection.execute("PRAGMA user_version = 2")
+
+    # Executa a migração
+    migrate_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        version = connection.execute(
+            "PRAGMA user_version"
+        ).fetchone()[0]
+
+        columns = [
+            column[1]
+            for column in connection.execute(
+                "PRAGMA table_info(saved_comparison)"
+            ).fetchall()
+        ]
+
+    assert version == 3
+    assert "notes" in columns

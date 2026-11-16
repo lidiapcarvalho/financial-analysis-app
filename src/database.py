@@ -19,10 +19,16 @@ def get_connection(database_path=DATABASE_PATH):
 
 
 def migrate_database(database_path=DATABASE_PATH):
-    """Migra a estrutura da base de dados da versão 1 para a versão 2."""
+    """Migra a estrutura da base de dados entre versões."""
 
     with get_connection(database_path) as connection:
 
+        # Obtém a versão atual da base de dados
+        version = connection.execute(
+            "PRAGMA user_version"
+        ).fetchone()[0]
+
+        # Verifica se a tabela company existe
         company_columns = {
             column[1]
             for column in connection.execute(
@@ -33,59 +39,84 @@ def migrate_database(database_path=DATABASE_PATH):
         if not company_columns:
             return
 
-        # Verifica se a base de dados ainda utiliza a estrutura v1
-        if "currency" not in company_columns:
-            return
+        # Migração v1 -> v2
+        if version == 0 and "currency" in company_columns:
 
-        connection.execute("BEGIN")
+            connection.execute("BEGIN")
 
-        # Remove a tabela antiga de registos financeiros
-        # (incluindo o registo de teste)
-        connection.execute("DROP TABLE financial_record")
+            connection.execute("DROP TABLE financial_record")
 
-        # Cria a nova tabela de empresas
-        connection.execute("""
-            CREATE TABLE company_v2 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                sector TEXT NOT NULL
+            connection.execute("""
+                CREATE TABLE company_v2 (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    sector TEXT NOT NULL
+                )
+            """)
+
+            connection.execute("""
+                INSERT INTO company_v2 (id, name, sector)
+                SELECT id, name, sector
+                FROM company
+            """)
+
+            connection.execute("DROP TABLE company")
+            connection.execute(
+                "ALTER TABLE company_v2 RENAME TO company"
             )
-        """)
 
-        # Preserva as empresas e os respetivos identificadores
-        connection.execute("""
-            INSERT INTO company_v2 (id, name, sector)
-            SELECT id, name, sector
-            FROM company
-        """)
+            connection.execute("""
+                CREATE TABLE financial_record (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    fiscal_year INTEGER NOT NULL CHECK(fiscal_year > 0),
+                    period_end TEXT NOT NULL,
+                    currency TEXT NOT NULL,
+                    unit TEXT NOT NULL,
+                    revenue REAL NOT NULL CHECK(revenue >= 0),
+                    operating_income REAL,
+                    net_income REAL,
+                    total_assets REAL NOT NULL CHECK(total_assets >= 0),
+                    total_liabilities REAL NOT NULL CHECK(total_liabilities >= 0),
+                    equity REAL,
+                    equity_attributable_to_owners REAL,
 
-        connection.execute("DROP TABLE company")
-        connection.execute("ALTER TABLE company_v2 RENAME TO company")
+                    FOREIGN KEY (company_id)
+                        REFERENCES company(id)
+                        ON DELETE NO ACTION,
 
-        # Cria a tabela de registos financeiros da versão 2
-        connection.execute("""
-            CREATE TABLE financial_record (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                company_id INTEGER NOT NULL,
-                fiscal_year INTEGER NOT NULL CHECK(fiscal_year > 0),
-                period_end TEXT NOT NULL,
-                currency TEXT NOT NULL,
-                unit TEXT NOT NULL,
-                revenue REAL NOT NULL CHECK(revenue >= 0),
-                operating_income REAL,
-                net_income REAL,
-                total_assets REAL NOT NULL CHECK(total_assets >= 0),
-                total_liabilities REAL NOT NULL CHECK(total_liabilities >= 0),
-                equity REAL,
-                equity_attributable_to_owners REAL,
+                    UNIQUE (company_id, fiscal_year)
+                )
+            """)
 
-                FOREIGN KEY (company_id)
-                    REFERENCES company(id)
-                    ON DELETE NO ACTION,
+            connection.commit()
 
-                UNIQUE (company_id, fiscal_year)
-            )
-        """)
+            connection.execute("PRAGMA user_version = 2")
+            version = 2
+
+        # Reconhece bases de dados v2 já existentes
+        elif version == 0 and "currency" not in company_columns:
+            version = 2
+            connection.execute("PRAGMA user_version = 2")
+
+        # Migração v2 -> v3
+        if version == 2:
+
+            comparison_columns = {
+                column[1]
+                for column in connection.execute(
+                    "PRAGMA table_info(saved_comparison)"
+                ).fetchall()
+            }
+
+            if "notes" not in comparison_columns:
+                connection.execute("""
+                    ALTER TABLE saved_comparison
+                    ADD COLUMN notes TEXT
+                """)
+
+            connection.commit()
+            connection.execute("PRAGMA user_version = 3")
 
 
 def initialize_database(database_path=DATABASE_PATH):
@@ -140,6 +171,42 @@ def initialize_database(database_path=DATABASE_PATH):
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
+
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS saved_comparison (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                notes TEXT,
+
+                FOREIGN KEY (user_id)
+                    REFERENCES user(id)
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION
+            )
+        """)
+
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS comparison_company (
+                comparison_id INTEGER NOT NULL,
+                company_id INTEGER NOT NULL,
+
+                PRIMARY KEY (comparison_id, company_id),
+
+                FOREIGN KEY (comparison_id)
+                    REFERENCES saved_comparison(id)
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION,
+
+                FOREIGN KEY (company_id)
+                    REFERENCES company(id)
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION
+            )
+        """)
+
+    connection.execute("PRAGMA user_version = 3")
 
 
 if __name__ == "__main__":
