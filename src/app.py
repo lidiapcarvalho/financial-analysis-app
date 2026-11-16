@@ -41,6 +41,13 @@ pages = {
             title="Comparação",
             icon="⚖️"
         )
+    ],
+    "Conta": [
+        st.Page(
+            "pages/5_Registo.py",
+            title="Registar Utilizador",
+            icon="👤"
+        )
     ]
 }
 

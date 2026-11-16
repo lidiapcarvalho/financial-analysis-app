@@ -17,8 +17,7 @@ initialize_database()
 st.title("Financial Analysis App")
 
 st.write(
-    "Plataforma de análise e comparação de dados financeiros "
-    "de empresas do setor de luxo."
+    "Plataforma de análise e comparação de dados financeiros de empresas."
 )
 
 st.divider()

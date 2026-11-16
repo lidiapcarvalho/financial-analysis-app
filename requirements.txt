@@ -4,3 +4,4 @@ pandas
 plotly
 pytest
 openpyxl
+argon2-cffi
