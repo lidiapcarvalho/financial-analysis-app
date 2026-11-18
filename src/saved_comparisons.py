@@ -40,7 +40,7 @@ def save_comparison(user_id, name, company_ids):
     try:
         with get_connection() as connection:
 
-            # Verifica se o utilizador existe
+            # 1. Verifica se o utilizador existe
             user_exists = connection.execute(
                 """
                 SELECT 1
@@ -54,7 +54,7 @@ def save_comparison(user_id, name, company_ids):
             if not user_exists:
                 return False, "O utilizador não existe."
 
-            # Verifica se todas as empresas existem
+            # 2. Verifica se todas as empresas existem
             placeholders = ", ".join("?" for _ in company_ids)
 
             companies = connection.execute(
@@ -69,39 +69,37 @@ def save_comparison(user_id, name, company_ids):
             if len(companies) != len(company_ids):
                 return False, "Uma ou mais empresas não existem."
 
-        # Guarda a comparação
-        cursor = connection.execute(
-            """
-            INSERT INTO saved_comparison (
-                user_id,
-                name
+            # 3. Guarda a comparação
+            cursor = connection.execute(
+                """
+                INSERT INTO saved_comparison (
+                    user_id,
+                    name
+                )
+                VALUES (?, ?)        
+                """,
+                (user_id, name)
             )
-            VALUES (?, ?)        
-            """,
-            (user_id, name)
-        )
 
-        # Obtém o ID da comparação criada
-        comparison_id = cursor.lastrowid
+            # 4. Obtém o ID da comparação criada
+            comparison_id = cursor.lastrowid
 
-        # Associa as empresas à comparação
-        connection.executemany(
-            """
-            INSERT INTO comparision_company (
-                comparison_id,
-                company_id
+            # 5. Associa as empresas à comparação
+            connection.executemany(
+                """
+                INSERT INTO comparison_company (
+                    comparison_id,
+                    company_id
+                )
+                VALUES (?, ?)
+                """,
+                [
+                    (comparison_id, company_id)
+                    for company_id in company_ids
+                ]
             )
-            VALUES (?, ?)
-            """,
-            [
-                (comparison_id, company_id)
-                for company_id in company_ids
-            ]
-        )
 
         return True, "Comparação guardada com sucesso."
-    except sqlite3.Error:
-        return False, "Ocorreu um erro ao consultar a base de dados."
 
     except sqlite3.IntegrityError:
         return False, "Não foi possível guardar a comparação. Verifica os dados."
