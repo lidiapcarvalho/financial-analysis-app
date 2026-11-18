@@ -47,6 +47,11 @@ pages = {
             "pages/5_Registo.py",
             title="Registar Utilizador",
             icon="👤"
+        ),
+        st.Page(
+            "pages/6_Comparacoes_Guardadas.py",
+            title="Comparações Guardadas",
+            icon="🔖"
         )
     ]
 }
