@@ -106,3 +106,142 @@ def save_comparison(user_id, name, company_ids):
 
     except sqlite3.Error:
         return False, "Ocorreu um erro ao guardar a comparação."
+
+
+def get_saved_comparisons(user_id):
+    """Obtém as comparações guardadas por um utilizador."""
+
+    try:
+        with get_connection() as connection:
+            comparisons = connection.execute(
+                """
+                SELECT
+                    id,
+                    name,
+                    created_at,
+                    notes
+                FROM saved_comparison
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                """,
+                (user_id,)
+            ).fetchall()
+
+        return comparisons
+
+    except sqlite3.Error:
+        return []
+
+
+def get_saved_comparison_details(user_id, comparison_id):
+    """Obtém os detalhes de uma comparação guardada."""
+
+    try:
+        with get_connection() as connection:
+            comparison = connection.execute(
+                """
+                SELECT
+                    id,
+                    name,
+                    created_at,
+                    notes
+                FROM saved_comparison
+                WHERE id = ? AND user_id = ?
+                """,
+                (comparison_id, user_id)
+            ).fetchone()
+
+            if comparison is None:
+                return None
+
+            companies = connection.execute(
+                """
+                SELECT
+                    company.id,
+                    company.name
+                FROM comparison_company
+                JOIN company
+                    ON comparison_company.company_id = company.id
+                WHERE comparison_company.comparison_id = ?
+                """,
+                (comparison_id,)
+            ).fetchall()
+
+        return {
+            "id": comparison[0],
+            "name": comparison[1],
+            "created_at": comparison[2],
+            "notes": comparison[3],
+            "companies": companies
+        }
+
+    except sqlite3.Error:
+        return None
+
+
+def update_comparison_notes(user_id, comparison_id, notes):
+    """Adiciona, atualiza ou elimina as notas de uma comparação."""
+
+    if notes is not None and not isinstance(notes, str):
+        return False
+
+    if isinstance(notes, str):
+        notes = notes.strip() or None
+
+    try:
+        with get_connection() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE saved_comparison
+                SET notes = ?
+                WHERE id = ? AND user_id = ?
+                """,
+                (notes, comparison_id, user_id)
+            )
+
+            if cursor.rowcount == 0:
+                return False
+
+        return True
+
+    except sqlite3.Error:
+        return False
+
+
+def delete_saved_comparison(user_id, comparison_id):
+    """Elimina uma comparação guardada por um utilizador."""
+
+    try:
+        with get_connection() as connection:
+            comparison = connection.execute(
+                """
+                SELECT id
+                FROM saved_comparison
+                WHERE id = ? AND user_id = ?
+                """,
+                (comparison_id, user_id)
+            ).fetchone()
+
+            if comparison is None:
+                return False
+
+            connection.execute(
+                """
+                DELETE FROM comparison_company
+                WHERE comparison_id = ?
+                """,
+                (comparison_id,)
+            )
+
+            connection.execute(
+                """
+                DELETE FROM saved_comparison
+                WHERE id = ? AND user_id = ?
+                """,
+                (comparison_id, user_id)
+            )
+
+        return True
+
+    except sqlite3.Error:
+        return False
