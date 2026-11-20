@@ -7,11 +7,11 @@ from src.saved_comparisons import (
     delete_saved_comparison
 )
 
-USER_ID = 1  # Temporário, até à implementação da autenticação
+USER_ID = 4  # Temporário, até à implementação da autenticação
 
 st.title("Comparações Guardadas")
 
-st.write("Consulte e gira as suas comparações financeirias guardadas.")
+st.write("Consulte e gira as suas comparações financeiras guardadas.")
 
 comparisons = get_saved_comparisons(USER_ID)
 
@@ -29,13 +29,26 @@ if comparisons:
                 comparison_id
             )
 
-            if details in details["companies"]:
+            if details:
+                if st.button(
+                    "Abrir comparação",
+                    key=f"open_{comparison_id}"
+                ):
+                    st.session_state["saved_comparison"] = details
+
+                    st.switch_page("pages/4_Comparacao.py")
+
+            if details and details["companies"]:
                 st.write("**Empresas:**")
 
                 for company_id, company_name in details["companies"]:
                     st.write(f"- {company_name}")
 
-            if details in details["notes"]:
+            if details and details["fiscal_years"]:
+                st.write("**Anos fiscais:**")
+                st.write(", ".join(map(str, details["fiscal_years"])))
+
+            if details and details["notes"]:
                 st.write("**Notas:**")
                 st.write(details["notes"])
 
@@ -52,13 +65,13 @@ if comparisons:
                 "Guardar notas",
                 key=f"save_notes_{comparison_id}"
             ):
-                sucess = update_comparison_notes(
+                success = update_comparison_notes(
                     USER_ID,
                     comparison_id,
                     updated_notes
                 )
 
-                if sucess:
+                if success:
                     st.success("Notas atualizadas com sucesso!")
                 else:
                     st.error("Não foi possível atualizar as notas.")

@@ -117,6 +117,27 @@ def migrate_database(database_path=DATABASE_PATH):
 
             connection.commit()
             connection.execute("PRAGMA user_version = 3")
+            version = 3
+
+        # Migração v3 -> v4
+        if version == 3:
+
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS comparison_period (
+                    comparison_id INTEGER NOT NULL,
+                    fiscal_year INTEGER NOT NULL CHECK(fiscal_year > 0),
+
+                    PRIMARY KEY (comparison_id, fiscal_year),
+
+                    FOREIGN KEY (comparison_id)
+                        REFERENCES saved_comparison(id)
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                )
+            """)
+
+            connection.commit()
+            connection.execute("PRAGMA user_version = 4")
 
 
 def initialize_database(database_path=DATABASE_PATH):
@@ -206,7 +227,21 @@ def initialize_database(database_path=DATABASE_PATH):
             )
         """)
 
-    connection.execute("PRAGMA user_version = 3")
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS comparison_period (
+                comparison_id INTEGER NOT NULL,
+                fiscal_year INTEGER NOT NULL CHECK(fiscal_year > 0),
+
+                PRIMARY KEY (comparison_id, fiscal_year),
+
+                FOREIGN KEY (comparison_id)
+                    REFERENCES saved_comparison(id)
+                    ON UPDATE NO ACTION
+                    ON DELETE CASCADE
+            )
+        """)
+
+    connection.execute("PRAGMA user_version = 4")
 
 
 if __name__ == "__main__":

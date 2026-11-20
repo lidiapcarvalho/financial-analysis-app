@@ -3,12 +3,17 @@ import sqlite3
 from src.database import get_connection
 
 
-def save_comparison(user_id, name, company_ids):
+def save_comparison(user_id, name, company_ids, fiscal_years, notes=None, comparison_id=None):
     """Guarda uma comparação e associa-lhe as empresas selecionadas."""
 
     # Validação do ID do utilizador
     if not isinstance(user_id, int) or user_id <= 0:
         return False, "O ID do utilizador não é válido."
+
+    # Validação do ID da comparação, quando fornecido
+    if comparison_id is not None:
+        if not isinstance(comparison_id, int) or comparison_id <= 0:
+            return False, "O ID da comparação não é válido."
 
     # Validação do nome da comparação
     if not isinstance(name, str) or not name.strip():
@@ -36,6 +41,34 @@ def save_comparison(user_id, name, company_ids):
         for company_id in company_ids
     ):
         return False, "Um ou mais IDs de empresas não são válidos."
+
+    # Validação dos anos fiscais
+    if not isinstance(fiscal_years, (list, tuple)):
+        return False, "A lista de anos fiscais não é válida."
+
+    if not fiscal_years:
+        return False, "A comparação deve incluir pelo menos um ano fiscal."
+
+    if not all(
+        type(year) is int and year > 0
+        for year in fiscal_years
+    ):
+        return False, "Um ou mais anos fiscais não são válidos."
+
+    if len(set(fiscal_years)) != len(fiscal_years):
+        return False, "Não podes selecionar o mesmo ano fiscal mais do que uma vez."
+
+    # Validação das notas
+    if notes is not None and not isinstance(notes, str):
+        return False, "As notas devem ser texto."
+
+    if notes is not None:
+        notes = notes.strip()
+
+        if not notes:
+            notes = None
+
+    is_update = comparison_id is not None
 
     try:
         with get_connection() as connection:
@@ -69,22 +102,66 @@ def save_comparison(user_id, name, company_ids):
             if len(companies) != len(company_ids):
                 return False, "Uma ou mais empresas não existem."
 
-            # 3. Guarda a comparação
-            cursor = connection.execute(
-                """
-                INSERT INTO saved_comparison (
-                    user_id,
-                    name
+            # 3. Cria ou atualiza a comparação
+            if not is_update:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO saved_comparison (
+                        user_id,
+                        name,
+                        notes
+                    )
+                    VALUES (?, ?, ?)
+                    """,
+                    (user_id, name, notes)
                 )
-                VALUES (?, ?)        
-                """,
-                (user_id, name)
-            )
 
-            # 4. Obtém o ID da comparação criada
-            comparison_id = cursor.lastrowid
+                comparison_id = cursor.lastrowid
 
-            # 5. Associa as empresas à comparação
+            else:
+                comparison_exists = connection.execute(
+                    """
+                    SELECT 1
+                    FROM saved_comparison
+                    WHERE id = ? AND user_id = ?
+                    LIMIT 1
+                    """,
+                    (comparison_id, user_id)
+                ).fetchone()
+
+                if not comparison_exists:
+                    return False, "A comparação não existe ou não te pertence."
+
+                connection.execute(
+                    """
+                    UPDATE saved_comparison
+                    SET name = ?, notes = ?
+                    WHERE id = ? AND user_id = ?
+                    """,
+                    (name, notes, comparison_id, user_id)
+                )
+
+            # 4. Atualiza as empresas associadas à comparação
+            if is_update:
+                connection.execute(
+                    """
+                    DELETE FROM comparison_company
+                    WHERE comparison_id = ?
+                    """,
+                    (comparison_id,)
+                )
+
+            # 5. Atualiza os anos fiscais associados à comparação
+            if is_update:
+                connection.execute(
+                    """
+                    DELETE FROM comparison_period
+                    WHERE comparison_id = ?
+                    """,
+                    (comparison_id,)
+                )
+
+            # 6. Associa as empresas à comparação
             connection.executemany(
                 """
                 INSERT INTO comparison_company (
@@ -98,6 +175,24 @@ def save_comparison(user_id, name, company_ids):
                     for company_id in company_ids
                 ]
             )
+
+            # 7. Associa os anos fiscais à comparação
+            connection.executemany(
+                """
+                INSERT INTO comparison_period (
+                    comparison_id,
+                    fiscal_year
+                )
+                VALUES (?, ?)
+                """,
+                [
+                    (comparison_id, fiscal_year)
+                    for fiscal_year in fiscal_years
+                ]
+            )
+
+        if is_update:
+            return True, "Comparação atualizada com sucesso."
 
         return True, "Comparação guardada com sucesso."
 
@@ -167,12 +262,23 @@ def get_saved_comparison_details(user_id, comparison_id):
                 (comparison_id,)
             ).fetchall()
 
+            fiscal_years = connection.execute(
+                """
+                SELECT fiscal_year
+                FROM comparison_period
+                WHERE comparison_id = ?
+                ORDER BY fiscal_year
+                """,
+                (comparison_id,)
+            ).fetchall()
+
         return {
             "id": comparison[0],
             "name": comparison[1],
             "created_at": comparison[2],
             "notes": comparison[3],
-            "companies": companies
+            "companies": companies,
+            "fiscal_years": [row[0] for row in fiscal_years]
         }
 
     except sqlite3.Error:

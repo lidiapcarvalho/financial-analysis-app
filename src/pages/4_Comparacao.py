@@ -6,14 +6,26 @@ from src.database import initialize_database
 from src.companies import get_all_companies
 from src.financial_records import get_financial_records_by_companies
 from src.financial_indicators import calculate_financial_indicators
+from src.saved_comparisons import save_comparison
+
+# Recupera uma comparação guardada, se existir
+saved_comparison = st.session_state.get(
+    "saved_comparison",
+)
+
+USER_ID = 4  # Temporário, até à implementação da autenticação
 
 initialize_database()
 
-st.title("Comparação Financeira")
-st.write(
-    "Compara os dados financeiros e os indicadores "
-    "de desempenho de diferentes empresas."
-)
+if saved_comparison:
+    st.title(saved_comparison["name"])
+    st.caption("Comparação guardada")
+else:
+    st.title("Comparação Financeira")
+    st.write(
+        "Compara os dados financeiros e os indicadores "
+        "de desempenho de diferentes empresas."
+    )
 
 st.divider()
 
@@ -30,9 +42,21 @@ company_options = {
     for company in companies
 }
 
+saved_company_ids = (
+    [company_id for company_id, _ in saved_comparison["companies"]]
+    if saved_comparison else []
+)
+
+default_companies = [
+    company_name
+    for company_name, company_id in company_options.items()
+    if company_id in saved_company_ids
+]
+
 selected_companies = st.multiselect(
     "Seleciona as empresas que pretendes comparar:",
     options=list(company_options.keys()),
+    default=default_companies,
     help="Seleciona pelo menos duas empresas para iniciar uma comparação."
 )
 
@@ -51,6 +75,37 @@ selected_company_ids = [
 financial_records = get_financial_records_by_companies(
     selected_company_ids
 )
+
+if not financial_records:
+    st.warning(
+        "Não existem registos financeiros para as empresas selecionadas."
+    )
+    st.stop()
+
+available_years = sorted({
+    record[3]
+    for record in financial_records
+})
+
+st.subheader("Seleção de Anos Fiscais")
+
+default_years = (
+    [
+        year for year in saved_comparison["fiscal_years"]
+        if year in available_years
+    ]
+    if saved_comparison else available_years
+)
+
+selected_fiscal_years = st.multiselect(
+    "Seleciona os anos fiscais que pretendes comparar:",
+    options=available_years,
+    default=default_years
+)
+
+if not selected_fiscal_years:
+    st.info("Seleciona pelo menos um ano fiscal.")
+    st.stop()
 
 analysis_records = []
 
@@ -162,6 +217,10 @@ if not df.empty:
         on=["Company", "Fiscal Year"],
         how="left"
     )
+
+    df = df[
+        df["Fiscal Year"].isin(selected_fiscal_years)
+    ]
 
 st.divider()
 
@@ -385,7 +444,7 @@ net_profit_margin_chart = px.line(
     title="Evolução da Margem do Lucro Líquida por Empresa",
     labels={
         "Fiscal Year": "Ano Fiscal",
-        "Net Profti Margin (%)": "Margem de Lucro Líquida (%)",
+        "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
         "Company": "Empresa"
     }
 )
@@ -472,10 +531,53 @@ st.plotly_chart(
 
 st.divider()
 
-st.subheader("Comparações Guardadas")
+st.subheader("Guardar Comparação")
 
-st.info(
-    "A funcionalidade de guardar, consultar e eliminar "
-    "comparações será integrada posteriormente com a gestão "
-    "de utilizadores."
-)
+with st.form("save_comparison_form"):
+
+    comparison_name = st.text_input(
+        "Nome da comparação",
+        max_chars=100,
+        help="Introduz um nome para identificar a comparação.",
+        value=(
+            saved_comparison["name"]
+            if saved_comparison else ""
+        ),
+    )
+
+    comparison_notes = st.text_area(
+        "Notas (opcional)",
+        help="Podes acrescentar observações sobre esta comparação.",
+        value=(
+            saved_comparison["notes"] or ""
+            if saved_comparison else ""
+        ),
+    )
+
+    submitted = st.form_submit_button("Guardar comparação")
+
+    if submitted:
+
+        success, message = save_comparison(
+            USER_ID,
+            comparison_name,
+            selected_company_ids,
+            selected_fiscal_years,
+            comparison_notes,
+            comparison_id=(
+                saved_comparison["id"]
+                if saved_comparison else None
+            )
+        )
+
+        if success:
+            st.success(message)
+
+            if saved_comparison:
+                st.session_state.pop("saved_comparison", None)
+                st.switch_page("pages/6_Comparacoes_Guardadas.py")
+
+            else:
+                st.rerun()
+        else:
+            st.error(message)
