@@ -109,7 +109,7 @@ def migrate_database(database_path=DATABASE_PATH):
                 ).fetchall()
             }
 
-            if "notes" not in comparison_columns:
+            if comparison_columns and "notes" not in comparison_columns:
                 connection.execute("""
                     ALTER TABLE saved_comparison
                     ADD COLUMN notes TEXT
@@ -137,7 +137,9 @@ def migrate_database(database_path=DATABASE_PATH):
             """)
 
             connection.commit()
+
             connection.execute("PRAGMA user_version = 4")
+            version = 4
 
 
 def initialize_database(database_path=DATABASE_PATH):
