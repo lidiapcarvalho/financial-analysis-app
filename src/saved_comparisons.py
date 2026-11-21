@@ -7,12 +7,12 @@ def save_comparison(user_id, name, company_ids, fiscal_years, notes=None, compar
     """Guarda uma comparação e associa-lhe as empresas selecionadas."""
 
     # Validação do ID do utilizador
-    if not isinstance(user_id, int) or user_id <= 0:
+    if type(user_id) is not int or user_id <= 0:
         return False, "O ID do utilizador não é válido."
 
     # Validação do ID da comparação, quando fornecido
     if comparison_id is not None:
-        if not isinstance(comparison_id, int) or comparison_id <= 0:
+        if type(comparison_id) is not int or comparison_id <= 0:
             return False, "O ID da comparação não é válido."
 
     # Validação do nome da comparação
@@ -26,11 +26,14 @@ def save_comparison(user_id, name, company_ids, fiscal_years, notes=None, compar
 
     # Validação das empresas selecionadas
 
-    if not isinstance(company_ids, (list, tuple)):
-        return False, "A lista de empresas não é válido."
-
-    if len(company_ids) < 2:
+    if not isinstance(company_ids, (list, tuple)) or len(company_ids) < 2:
         return False, "A comparação deve incluir pelo menos duas empresas."
+
+    if not all(
+        type(company_id) is int and company_id > 0
+        for company_id in company_ids
+    ):
+        return False, "Um ou mais IDs de empresas não são válidos."
 
     if len(set(company_ids)) != len(company_ids):
         return False, "Não podes selecionar a mesma empresa mais do que uma vez."
@@ -206,6 +209,9 @@ def save_comparison(user_id, name, company_ids, fiscal_years, notes=None, compar
 def get_saved_comparisons(user_id):
     """Obtém as comparações guardadas por um utilizador."""
 
+    if type(user_id) is not int or user_id <= 0:
+        return []
+
     try:
         with get_connection() as connection:
             comparisons = connection.execute(
@@ -230,6 +236,12 @@ def get_saved_comparisons(user_id):
 
 def get_saved_comparison_details(user_id, comparison_id):
     """Obtém os detalhes de uma comparação guardada."""
+
+    if type(user_id) is not int or user_id <= 0:
+        return None
+
+    if type(comparison_id) is not int or comparison_id <= 0:
+        return None
 
     try:
         with get_connection() as connection:
@@ -288,6 +300,12 @@ def get_saved_comparison_details(user_id, comparison_id):
 def update_comparison_notes(user_id, comparison_id, notes):
     """Adiciona, atualiza ou elimina as notas de uma comparação."""
 
+    if type(user_id) is not int or user_id <= 0:
+        return False
+
+    if type(comparison_id) is not int or comparison_id <= 0:
+        return False
+
     if notes is not None and not isinstance(notes, str):
         return False
 
@@ -316,6 +334,12 @@ def update_comparison_notes(user_id, comparison_id, notes):
 
 def delete_saved_comparison(user_id, comparison_id):
     """Elimina uma comparação guardada por um utilizador."""
+
+    if type(user_id) is not int or user_id <= 0:
+        return False
+
+    if type(comparison_id) is not int or comparison_id <= 0:
+        return False
 
     try:
         with get_connection() as connection:

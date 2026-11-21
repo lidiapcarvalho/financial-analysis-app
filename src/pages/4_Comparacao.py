@@ -226,31 +226,24 @@ st.divider()
 
 st.subheader("Comparação dos Dados Financeiros")
 
-if not financial_records:
-    st.warning(
-        "Não existem registos financeiros disponíveis "
-        "para as empresas selecionadas."
-    )
-else:
-    financial_data_columns = [
-        "Company",
-        "Fiscal Year",
-        "Period End",
-        "Currency",
-        "Unit",
-        "Revenue",
-        "Operating Income",
-        "Net Income",
-        "Total Assets",
-        "Equity"
-    ]
+financial_data_columns = [
+    "Company",
+    "Fiscal Year",
+    "Period End",
+    "Currency",
+    "Unit",
+    "Revenue",
+    "Operating Income",
+    "Net Income",
+    "Total Assets",
+    "Equity"
+]
 
-    st.dataframe(
-        df[financial_data_columns],
-        use_container_width=True,
-        hide_index=True
-    )
-
+st.dataframe(
+    df[financial_data_columns],
+    use_container_width=True,
+    hide_index=True
+)
 
 st.subheader("Comparação dos Indicadores")
 
@@ -410,24 +403,27 @@ st.subheader("Evolução da Margem Operacional")
 
 indicator_table = df.dropna(subset=["Operating Margin (%)"])
 
-operating_margin_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Operating Margin (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Margem Operacional por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Operating Margin (%)": "Margem Operacional (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    operating_margin_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Operating Margin (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Margem Operacional por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Operating Margin (%)": "Margem Operacional (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    operating_margin_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        operating_margin_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -435,24 +431,27 @@ st.subheader("Evolução da Margem do Lucro Líquida")
 
 indicator_table = df.dropna(subset=["Net Profit Margin (%)"])
 
-net_profit_margin_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Net Profit Margin (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Margem do Lucro Líquida por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    net_profit_margin_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Net Profit Margin (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Margem do Lucro Líquida por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    net_profit_margin_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        net_profit_margin_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -460,24 +459,27 @@ st.subheader("Evolução da Taxa de Crescimento da Receita")
 
 indicator_table = df.dropna(subset=["Revenue Growth (%)"])
 
-revenue_growth_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Revenue Growth (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Taxa de Crescimento da Receita por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Revenue Growth (%)": "Taxa de Crescimento da Receita (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    revenue_growth_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Revenue Growth (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Taxa de Crescimento da Receita por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Revenue Growth (%)": "Taxa de Crescimento da Receita (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    revenue_growth_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        revenue_growth_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -485,49 +487,57 @@ st.subheader("Evolução do ROA")
 
 indicator_table = df.dropna(subset=["ROA (%)"])
 
-roa_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="ROA (%)",
-    color="Company",
-    markers=True,
-    title="Evolução do ROA (%)",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "ROA (%)": "Rendibilidade do Ativo (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    roa_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="ROA (%)",
+        color="Company",
+        markers=True,
+        title="Evolução do ROA (%)",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "ROA (%)": "Rendibilidade do Ativo (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    roa_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        roa_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
 st.subheader("Evolução do ROE")
 
+st.subheader("Evolução do ROE")
+
 indicator_table = df.dropna(subset=["ROE (%)"])
 
-roe_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="ROE (%)",
-    color="Company",
-    markers=True,
-    title="Evolução do ROE (%)",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "ROE (%)": "Rendibilidade dos Capitais Próprios (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    roe_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="ROE (%)",
+        color="Company",
+        markers=True,
+        title="Evolução do ROE (%)",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "ROE (%)": "Rendibilidade dos Capitais Próprios (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    roe_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        roe_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 

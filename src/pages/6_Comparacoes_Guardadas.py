@@ -9,6 +9,24 @@ from src.saved_comparisons import (
 
 USER_ID = 4  # Temporário, até à implementação da autenticação
 
+
+@st.dialog("Confirmar eliminação")
+def confirm_delete_dialog(comparison_id):
+    st.warning("Tens a certeza de que pretendes eliminar esta comparação?")
+
+    if st.button("Confirmar eliminação", type="primary"):
+        success = delete_saved_comparison(
+            USER_ID,
+            comparison_id
+        )
+
+        if success:
+            st.success("Comparação eliminada com sucesso!")
+            st.rerun()
+        else:
+            st.error("Não foi possível eliminar a comparação.")
+
+
 st.title("Comparações Guardadas")
 
 st.write("Consulte e gira as suas comparações financeiras guardadas.")
@@ -48,33 +66,34 @@ if comparisons:
                 st.write("**Anos fiscais:**")
                 st.write(", ".join(map(str, details["fiscal_years"])))
 
-            if details and details["notes"]:
-                st.write("**Notas:**")
-                st.write(details["notes"])
+            if details:
+                if details and details["notes"]:
+                    st.write("**Notas:**")
+                    st.write(details["notes"])
 
-            st.divider()
-            st.write("**Editar notas**")
+                st.divider()
+                st.write("**Editar notas**")
 
-            updated_notes = st.text_area(
-                "Notas da comparação",
-                value=details["notes"] or "",
-                key=f"notes_{comparison_id}"
-            )
-
-            if st.button(
-                "Guardar notas",
-                key=f"save_notes_{comparison_id}"
-            ):
-                success = update_comparison_notes(
-                    USER_ID,
-                    comparison_id,
-                    updated_notes
+                updated_notes = st.text_area(
+                    "Notas da comparação",
+                    value=details["notes"] or "",
+                    key=f"notes_{comparison_id}"
                 )
 
-                if success:
-                    st.success("Notas atualizadas com sucesso!")
-                else:
-                    st.error("Não foi possível atualizar as notas.")
+                if st.button(
+                    "Guardar notas",
+                    key=f"save_notes_{comparison_id}"
+                ):
+                    success = update_comparison_notes(
+                        USER_ID,
+                        comparison_id,
+                        updated_notes
+                    )
+
+                    if success:
+                        st.success("Notas atualizadas com sucesso!")
+                    else:
+                        st.error("Não foi possível atualizar as notas.")
 
             st.divider()
 
@@ -83,16 +102,7 @@ if comparisons:
                 key=f"delete_{comparison_id}",
                 type="secondary"
             ):
-                success = delete_saved_comparison(
-                    USER_ID,
-                    comparison_id
-                )
-
-                if success:
-                    st.success("Comparação eliminada com sucesso!")
-                    st.rerun()
-                else:
-                    st.error("Não foi possível eliminar a comparação.")
+                confirm_delete_dialog(comparison_id)
 
 else:
     st.info("Ainda não existem comparações guardadas.")
