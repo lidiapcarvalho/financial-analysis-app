@@ -3,7 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from src.database import initialize_database, get_connection
+from src.database import (
+    initialize_database,
+    get_connection,
+    migrate_database
+)
 from src.companies import add_company, get_all_companies
 
 # Teste 1: Verifica se as tabelas principais existem na base de dados do projeto
@@ -181,3 +185,176 @@ def test_initialize_database_creates_missing_directory(tmp_path):
 
     assert database_path.parent.exists()
     assert database_path.exists()
+
+
+# Teste 7: Verifica se uma nova base de dados é criada na versão 4
+# e contém a coluna notes e a tabela comparison_period
+
+def test_new_database_has_version_4_and_comparison_period(tmp_path):
+
+    database_path = tmp_path / "test_version_4.db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        version = connection.execute(
+            "PRAGMA user_version"
+        ).fetchone()[0]
+
+        comparison_columns = [
+            column[1]
+            for column in connection.execute(
+                "PRAGMA table_info(saved_comparison)"
+            ).fetchall()
+        ]
+
+        period_columns = [
+            column[1]
+            for column in connection.execute(
+                "PRAGMA table_info(comparison_period)"
+            ).fetchall()
+        ]
+
+    assert version == 4
+    assert "notes" in comparison_columns
+    assert "comparison_id" in period_columns
+    assert "fiscal_year" in period_columns
+
+
+# Teste 8: Verifica se uma base de dados v2 é migrada para v3
+
+def test_migrate_database_v2_to_v3(tmp_path):
+
+    database_path = tmp_path / "test_migration.db"
+
+    # Cria uma estrutura simplificada da versão 2
+    with sqlite3.connect(database_path) as connection:
+
+        connection.execute("""
+            CREATE TABLE company (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                sector TEXT NOT NULL
+            )
+        """)
+
+        connection.execute("""
+            CREATE TABLE saved_comparison (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        connection.execute("PRAGMA user_version = 2")
+
+    # Executa a migração
+    migrate_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        version = connection.execute(
+            "PRAGMA user_version"
+        ).fetchone()[0]
+
+        columns = [
+            column[1]
+            for column in connection.execute(
+                "PRAGMA table_info(saved_comparison)"
+            ).fetchall()
+        ]
+
+    period_table = connection.execute("""
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+        AND name = 'comparison_period'
+    """).fetchone()
+
+    assert period_table is not None
+
+    assert version == 4
+    assert "notes" in columns
+
+# Teste 9: Verifica as restrições da tabela comparison_period
+
+
+def test_comparison_period_constraints(tmp_path):
+
+    database_path = tmp_path / "test_period.db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        user_cursor = connection.execute("""
+            INSERT INTO user (username, email, password_hash)
+            VALUES (?, ?, ?)
+        """, ("test_user", "test@example.com", "hash"))
+
+        user_id = user_cursor.lastrowid
+
+        comparison_cursor = connection.execute("""
+            INSERT INTO saved_comparison (user_id, name)
+            VALUES (?, ?)
+        """, (user_id, "Comparação de teste"))
+
+        comparison_id = comparison_cursor.lastrowid
+
+        connection.execute("""
+            INSERT INTO comparison_period (comparison_id, fiscal_year)
+            VALUES (?, ?)
+        """, (comparison_id, 2025))
+
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute("""
+                INSERT INTO comparison_period (comparison_id, fiscal_year)
+                VALUES (?, ?)
+            """, (comparison_id, 2025))
+
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute("""
+                INSERT INTO comparison_period (comparison_id, fiscal_year)
+                VALUES (?, ?)
+            """, (999, 2025))
+
+# Teste 10: Verifica se os períodos são eliminados
+# quando a comparação associada é eliminada
+
+
+def test_delete_comparison_cascades_to_periods(tmp_path):
+
+    database_path = tmp_path / "test_cascade.db"
+    initialize_database(database_path)
+
+    with get_connection(database_path) as connection:
+
+        user_cursor = connection.execute("""
+            INSERT INTO user (username, email, password_hash)
+            VALUES (?, ?, ?)
+        """, ("test_user", "test@example.com", "hash"))
+
+        comparison_cursor = connection.execute("""
+            INSERT INTO saved_comparison (user_id, name)
+            VALUES (?, ?)
+        """, (user_cursor.lastrowid, "Comparação de teste"))
+
+        comparison_id = comparison_cursor.lastrowid
+
+        connection.execute("""
+            INSERT INTO comparison_period (comparison_id, fiscal_year)
+            VALUES (?, ?)
+        """, (comparison_id, 2025))
+
+        connection.execute("""
+            DELETE FROM saved_comparison
+            WHERE id = ?
+        """, (comparison_id,))
+
+        periods = connection.execute("""
+            SELECT *
+            FROM comparison_period
+            WHERE comparison_id = ?
+        """, (comparison_id,)).fetchall()
+
+    assert periods == []

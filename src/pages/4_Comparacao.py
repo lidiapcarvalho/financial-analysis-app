@@ -6,14 +6,26 @@ from src.database import initialize_database
 from src.companies import get_all_companies
 from src.financial_records import get_financial_records_by_companies
 from src.financial_indicators import calculate_financial_indicators
+from src.saved_comparisons import save_comparison
+
+# Recupera uma comparação guardada, se existir
+saved_comparison = st.session_state.get(
+    "saved_comparison",
+)
+
+USER_ID = 4  # Temporário, até à implementação da autenticação
 
 initialize_database()
 
-st.title("Comparação Financeira")
-st.write(
-    "Compara os dados financeiros e os indicadores "
-    "de desempenho de diferentes empresas."
-)
+if saved_comparison:
+    st.title(saved_comparison["name"])
+    st.caption("Comparação guardada")
+else:
+    st.title("Comparação Financeira")
+    st.write(
+        "Compara os dados financeiros e os indicadores "
+        "de desempenho de diferentes empresas."
+    )
 
 st.divider()
 
@@ -30,9 +42,21 @@ company_options = {
     for company in companies
 }
 
+saved_company_ids = (
+    [company_id for company_id, _ in saved_comparison["companies"]]
+    if saved_comparison else []
+)
+
+default_companies = [
+    company_name
+    for company_name, company_id in company_options.items()
+    if company_id in saved_company_ids
+]
+
 selected_companies = st.multiselect(
     "Seleciona as empresas que pretendes comparar:",
     options=list(company_options.keys()),
+    default=default_companies,
     help="Seleciona pelo menos duas empresas para iniciar uma comparação."
 )
 
@@ -51,6 +75,37 @@ selected_company_ids = [
 financial_records = get_financial_records_by_companies(
     selected_company_ids
 )
+
+if not financial_records:
+    st.warning(
+        "Não existem registos financeiros para as empresas selecionadas."
+    )
+    st.stop()
+
+available_years = sorted({
+    record[3]
+    for record in financial_records
+})
+
+st.subheader("Seleção de Anos Fiscais")
+
+default_years = (
+    [
+        year for year in saved_comparison["fiscal_years"]
+        if year in available_years
+    ]
+    if saved_comparison else available_years
+)
+
+selected_fiscal_years = st.multiselect(
+    "Seleciona os anos fiscais que pretendes comparar:",
+    options=available_years,
+    default=default_years
+)
+
+if not selected_fiscal_years:
+    st.info("Seleciona pelo menos um ano fiscal.")
+    st.stop()
 
 analysis_records = []
 
@@ -163,35 +218,32 @@ if not df.empty:
         how="left"
     )
 
+    df = df[
+        df["Fiscal Year"].isin(selected_fiscal_years)
+    ]
+
 st.divider()
 
 st.subheader("Comparação dos Dados Financeiros")
 
-if not financial_records:
-    st.warning(
-        "Não existem registos financeiros disponíveis "
-        "para as empresas selecionadas."
-    )
-else:
-    financial_data_columns = [
-        "Company",
-        "Fiscal Year",
-        "Period End",
-        "Currency",
-        "Unit",
-        "Revenue",
-        "Operating Income",
-        "Net Income",
-        "Total Assets",
-        "Equity"
-    ]
+financial_data_columns = [
+    "Company",
+    "Fiscal Year",
+    "Period End",
+    "Currency",
+    "Unit",
+    "Revenue",
+    "Operating Income",
+    "Net Income",
+    "Total Assets",
+    "Equity"
+]
 
-    st.dataframe(
-        df[financial_data_columns],
-        use_container_width=True,
-        hide_index=True
-    )
-
+st.dataframe(
+    df[financial_data_columns],
+    use_container_width=True,
+    hide_index=True
+)
 
 st.subheader("Comparação dos Indicadores")
 
@@ -351,24 +403,27 @@ st.subheader("Evolução da Margem Operacional")
 
 indicator_table = df.dropna(subset=["Operating Margin (%)"])
 
-operating_margin_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Operating Margin (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Margem Operacional por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Operating Margin (%)": "Margem Operacional (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    operating_margin_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Operating Margin (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Margem Operacional por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Operating Margin (%)": "Margem Operacional (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    operating_margin_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        operating_margin_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -376,24 +431,27 @@ st.subheader("Evolução da Margem do Lucro Líquida")
 
 indicator_table = df.dropna(subset=["Net Profit Margin (%)"])
 
-net_profit_margin_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Net Profit Margin (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Margem do Lucro Líquida por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Net Profti Margin (%)": "Margem de Lucro Líquida (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    net_profit_margin_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Net Profit Margin (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Margem do Lucro Líquida por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    net_profit_margin_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        net_profit_margin_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -401,24 +459,27 @@ st.subheader("Evolução da Taxa de Crescimento da Receita")
 
 indicator_table = df.dropna(subset=["Revenue Growth (%)"])
 
-revenue_growth_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="Revenue Growth (%)",
-    color="Company",
-    markers=True,
-    title="Evolução da Taxa de Crescimento da Receita por Empresa",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "Revenue Growth (%)": "Taxa de Crescimento da Receita (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    revenue_growth_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="Revenue Growth (%)",
+        color="Company",
+        markers=True,
+        title="Evolução da Taxa de Crescimento da Receita por Empresa",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "Revenue Growth (%)": "Taxa de Crescimento da Receita (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    revenue_growth_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        revenue_growth_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
@@ -426,56 +487,107 @@ st.subheader("Evolução do ROA")
 
 indicator_table = df.dropna(subset=["ROA (%)"])
 
-roa_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="ROA (%)",
-    color="Company",
-    markers=True,
-    title="Evolução do ROA (%)",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "ROA (%)": "Rendibilidade do Ativo (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    roa_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="ROA (%)",
+        color="Company",
+        markers=True,
+        title="Evolução do ROA (%)",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "ROA (%)": "Rendibilidade do Ativo (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    roa_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        roa_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
 st.subheader("Evolução do ROE")
 
+st.subheader("Evolução do ROE")
+
 indicator_table = df.dropna(subset=["ROE (%)"])
 
-roe_chart = px.line(
-    indicator_table,
-    x="Fiscal Year",
-    y="ROE (%)",
-    color="Company",
-    markers=True,
-    title="Evolução do ROE (%)",
-    labels={
-        "Fiscal Year": "Ano Fiscal",
-        "ROE (%)": "Rendibilidade dos Capitais Próprios (%)",
-        "Company": "Empresa"
-    }
-)
+if not indicator_table.empty:
+    roe_chart = px.line(
+        indicator_table,
+        x="Fiscal Year",
+        y="ROE (%)",
+        color="Company",
+        markers=True,
+        title="Evolução do ROE (%)",
+        labels={
+            "Fiscal Year": "Ano Fiscal",
+            "ROE (%)": "Rendibilidade dos Capitais Próprios (%)",
+            "Company": "Empresa"
+        }
+    )
 
-st.plotly_chart(
-    roe_chart,
-    use_container_width=True
-)
+    st.plotly_chart(
+        roe_chart,
+        use_container_width=True
+    )
+else:
+    st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
 
-st.subheader("Comparações Guardadas")
+st.subheader("Guardar Comparação")
 
-st.info(
-    "A funcionalidade de guardar, consultar e eliminar "
-    "comparações será integrada posteriormente com a gestão "
-    "de utilizadores."
-)
+with st.form("save_comparison_form"):
+
+    comparison_name = st.text_input(
+        "Nome da comparação",
+        max_chars=100,
+        help="Introduz um nome para identificar a comparação.",
+        value=(
+            saved_comparison["name"]
+            if saved_comparison else ""
+        ),
+    )
+
+    comparison_notes = st.text_area(
+        "Notas (opcional)",
+        help="Podes acrescentar observações sobre esta comparação.",
+        value=(
+            saved_comparison["notes"] or ""
+            if saved_comparison else ""
+        ),
+    )
+
+    submitted = st.form_submit_button("Guardar comparação")
+
+    if submitted:
+
+        success, message = save_comparison(
+            USER_ID,
+            comparison_name,
+            selected_company_ids,
+            selected_fiscal_years,
+            comparison_notes,
+            comparison_id=(
+                saved_comparison["id"]
+                if saved_comparison else None
+            )
+        )
+
+        if success:
+            st.success(message)
+
+            if saved_comparison:
+                st.session_state.pop("saved_comparison", None)
+                st.switch_page("pages/6_Comparacoes_Guardadas.py")
+
+            else:
+                st.rerun()
+        else:
+            st.error(message)
