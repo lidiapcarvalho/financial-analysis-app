@@ -13,7 +13,7 @@ saved_comparison = st.session_state.get(
     "saved_comparison",
 )
 
-USER_ID = 4  # Temporário, até à implementação da autenticação
+user_id = st.session_state["user"]["id"]
 
 initialize_database()
 
@@ -569,7 +569,7 @@ with st.form("save_comparison_form"):
     if submitted:
 
         success, message = save_comparison(
-            USER_ID,
+            user_id,
             comparison_name,
             selected_company_ids,
             selected_fiscal_years,

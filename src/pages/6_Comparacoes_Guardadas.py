@@ -7,7 +7,7 @@ from src.saved_comparisons import (
     delete_saved_comparison
 )
 
-USER_ID = 4  # Temporário, até à implementação da autenticação
+user_id = st.session_state["user"]["id"]
 
 
 @st.dialog("Confirmar eliminação")
@@ -16,7 +16,7 @@ def confirm_delete_dialog(comparison_id):
 
     if st.button("Confirmar eliminação", type="primary"):
         success = delete_saved_comparison(
-            USER_ID,
+            user_id,
             comparison_id
         )
 
@@ -31,7 +31,7 @@ st.title("Comparações Guardadas")
 
 st.write("Consulte e gira as suas comparações financeiras guardadas.")
 
-comparisons = get_saved_comparisons(USER_ID)
+comparisons = get_saved_comparisons(user_id)
 
 if comparisons:
     st.subheader("As minhas comparações")
@@ -43,7 +43,7 @@ if comparisons:
             st.caption(f"Criada em: {created_at}")
 
             details = get_saved_comparison_details(
-                USER_ID,
+                user_id,
                 comparison_id
             )
 
@@ -85,7 +85,7 @@ if comparisons:
                     key=f"save_notes_{comparison_id}"
                 ):
                     success = update_comparison_notes(
-                        USER_ID,
+                        user_id,
                         comparison_id,
                         updated_notes
                     )

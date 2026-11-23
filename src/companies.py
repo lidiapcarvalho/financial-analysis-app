@@ -1,6 +1,15 @@
 from src.database import get_connection
 
 
+def _require_admin(role):
+    """Verifica se o utilizador tem permissões de administrador."""
+
+    if role != "admin":
+        raise PermissionError(
+            "Não tens permissões para executar esta operação."
+        )
+
+
 def get_all_companies(database_path=None):
     """Devolve todas as empresas registradas na base de dados."""
 
@@ -16,8 +25,10 @@ def get_all_companies(database_path=None):
     return companies
 
 
-def add_company(name, sector, database_path=None):
+def add_company(name, sector, database_path=None, *, role=None):
     """Regista uma nova empresa na base de dados"""
+
+    _require_admin(role)
 
     name = name.strip()
     sector = sector.strip()
@@ -40,8 +51,12 @@ def add_company(name, sector, database_path=None):
         return cursor.lastrowid
 
 
-def update_company(company_id, name, sector, database_path=None):
+def update_company(
+    company_id, name, sector, database_path=None, *, role=None
+):
     """Atualiza os dados de uma empresa registada na base de dados"""
+
+    _require_admin(role)
 
     name = name.strip()
     sector = sector.strip()
@@ -84,8 +99,10 @@ def update_company(company_id, name, sector, database_path=None):
         )
 
 
-def delete_company(company_id, database_path=None):
+def delete_company(company_id, database_path=None, *, role=None):
     """Elimina uma empresa da base de dados, caso não tenha registos financeiros associados."""
+
+    _require_admin(role)
 
     with get_connection(database_path) as connection:
         company = connection.execute(

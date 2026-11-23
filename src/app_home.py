@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.database import initialize_database
-
+from src.users import authenticate_user
 
 # Configuração da aplicação
 st.set_page_config(
@@ -37,6 +37,48 @@ st.markdown(
 
 st.divider()
 
-st.info(
-    "Seleciona uma das páginas no menu lateral para começar."
-)
+
+# Autenticação do utilizador
+
+if st.session_state.get("authenticated", False):
+
+    st.success(
+        f" Sessão iniciada como {st.session_state['user']['username']}."
+    )
+
+    if st.button("Terminar sessão"):
+        st.session_state.pop("authenticated", None)
+        st.session_state.pop("user", None)
+        st.rerun()
+
+else:
+
+    st.subheader("Iniciar sessão")
+
+    with st.form("login_form"):
+
+        username = st.text_input("Nome de utilizador")
+        password = st.text_input(
+            "Palavra-passe",
+            type="password"
+        )
+
+        submitted = st.form_submit_button(
+            "Entrar",
+            use_container_width=True
+        )
+
+    if submitted:
+
+        success, user = authenticate_user(username, password)
+
+        if success:
+            st.session_state["authenticated"] = True
+            st.session_state["user"] = user
+            st.success("Autenticação efetuada com sucesso.")
+            st.rerun()
+
+        else:
+            st.error("Nome de utilizador ou palavra-passe incorretos.")
+
+    st.info("Ainda não tens conta? Utiliza a página de registo para criar uma.")

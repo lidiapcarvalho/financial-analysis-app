@@ -1,7 +1,12 @@
 import pytest
 
 from src.database import get_connection, initialize_database
-from src.users import create_user, verify_password, hash_password
+from src.users import (
+    create_user,
+    verify_password,
+    hash_password,
+    authenticate_user
+)
 
 
 @pytest.fixture
@@ -223,3 +228,104 @@ def test_create_user_with_email_different_case(test_database):
 
     assert success is False
     assert message == "Este endereço de e-mail já está registado."
+
+
+# Autenticação com credenciais válidas
+
+def test_authenticate_user_successfully(test_database):
+
+    create_user(
+        "test_user",
+        "test@example.com",
+        "Password12345!"
+    )
+
+    success, user = authenticate_user(
+        "test_user",
+        "Password12345!"
+    )
+
+    assert success is True
+    assert user is not None
+    assert user["id"] is not None
+    assert user["username"] == "test_user"
+    assert user["email"] == "test@example.com"
+    assert user["role"] == "user"
+    assert "password_hash" not in user
+
+
+def test_authenticate_admin_successfully(test_database):
+
+    create_user(
+        "admin_user",
+        "admin@example.com",
+        "Password12345!"
+    )
+
+    with get_connection(test_database) as connection:
+        connection.execute(
+            "UPDATE user SET role = ? WHERE username = ?",
+            ("admin", "admin_user")
+        )
+
+    success, user = authenticate_user(
+        "admin_user",
+        "Password12345!"
+    )
+
+    assert success is True
+    assert user is not None
+    assert user["username"] == "admin_user"
+    assert user["role"] == "admin"
+
+# Autenticação com palavra-passe incorreta
+
+
+def test_authenticate_user_with_wrong_password(test_database):
+
+    create_user(
+        "test_user",
+        "test@example.com",
+        "Password12345!"
+    )
+
+    success, user = authenticate_user(
+        "test_user",
+        "WrongPassword123!"
+    )
+
+    assert success is False
+    assert user is None
+
+
+# Autenticação com utilizador inexistente
+
+def test_authenticate_user_with_nonexistent_username(test_database):
+
+    success, user = authenticate_user(
+        "unknown_user",
+        "Password12345!"
+    )
+
+    assert success is False
+    assert user is None
+
+
+# Autenticação com campos vazios
+
+@pytest.mark.parametrize(
+    "username, password",
+    [
+        ("", "Password12345!"),
+        ("test_user", ""),
+        ("", ""),
+    ]
+)
+def test_authenticate_user_with_empty_fields(
+    test_database, username, password
+):
+
+    success, user = authenticate_user(username, password)
+
+    assert success is False
+    assert user is None

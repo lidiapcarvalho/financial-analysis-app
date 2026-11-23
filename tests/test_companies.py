@@ -42,7 +42,8 @@ def test_add_company_returns_company_id(tmp_path):
     company_id = add_company(
         "LVMH",
         "Luxury",
-        database_path
+        database_path,
+        role="admin"
     )
 
     companies = get_all_companies(database_path)
@@ -59,10 +60,10 @@ def test_add_company_rejects_duplicate_name(tmp_path):
     database_path = tmp_path / "test_duplicate_company.db"
     initialize_database(database_path)
 
-    add_company("LVMH", "Luxury", database_path)
+    add_company("LVMH", "Luxury", database_path, role="admin")
 
     with pytest.raises(sqlite3.IntegrityError):
-        add_company("LVMH", "Luxury", database_path)
+        add_company("LVMH", "Luxury", database_path, role="admin")
 
 # Teste 4: Verifica se a função rejeita empresas sem nome ou setor
 
@@ -82,7 +83,8 @@ def test_add_company_rejects_empty_required_fields(tmp_path):
             add_company(
                 name,
                 sector,
-                database_path
+                database_path,
+                role="admin"
             )
 
 # Teste 5: Verifica se a função remove espaços desnecessários
@@ -95,7 +97,8 @@ def test_add_company_normalizes_input_data(tmp_path):
     add_company(
         "  LVMH  ",
         "  Luxury  ",
-        database_path
+        database_path,
+        role="admin"
     )
 
     companies = get_all_companies(database_path)
@@ -112,11 +115,11 @@ def test_update_company(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     update_company(
-        company_id, "LVMH Group", "Luxury Goods", database_path
+        company_id, "LVMH Group", "Luxury Goods", database_path, role="admin"
     )
 
     companies = get_all_companies(database_path)
@@ -136,7 +139,7 @@ def test_update_nonexistent_company(tmp_path):
 
     with pytest.raises(ValueError, match="A empresa não existe."):
         update_company(
-            999, "Empresa Teste", "Luxury", database_path
+            999, "Empresa Teste", "Luxury", database_path, role="admin"
         )
 
 # Teste 8: Testar os campos obrigatórios vazios
@@ -158,12 +161,12 @@ def test_update_company_empty_fields(
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     with pytest.raises(ValueError, match=expected_error):
         update_company(
-            company_id, name, sector, database_path
+            company_id, name, sector, database_path, role="admin"
         )
 
 # Teste 9: Testar a normalização dos valores
@@ -176,11 +179,11 @@ def test_update_company_normalizes_inputs(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     update_company(
-        company_id, " Kering ", " Luxury ", database_path
+        company_id, " Kering ", " Luxury ", database_path, role="admin"
     )
 
     companies = get_all_companies(database_path)
@@ -189,7 +192,7 @@ def test_update_company_normalizes_inputs(tmp_path):
         (company_id, "Kering", "Luxury")
     ]
 
-# Teste 12: Eliminar uma empresa existente sem registos financeiros
+# Teste 10: Eliminar uma empresa existente sem registos financeiros
 
 
 def test_delete_company(tmp_path):
@@ -199,16 +202,16 @@ def test_delete_company(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
-    delete_company(company_id, database_path)
+    delete_company(company_id, database_path, role="admin")
 
     companies = get_all_companies(database_path)
 
     assert companies == []
 
-# Teste 13: Impedir a elimnação de uma empresa com registos financeiros
+# Teste 11: Impedir a elimnação de uma empresa com registos financeiros
 
 
 def test_delete_company_with_financial_records(tmp_path):
@@ -218,7 +221,7 @@ def test_delete_company_with_financial_records(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     with get_connection(database_path) as connection:
@@ -252,4 +255,4 @@ def test_delete_company_with_financial_records(tmp_path):
         ValueError,
         match="Não é possível eliminar uma empresa com registos financeiros associados."
     ):
-        delete_company(company_id, database_path)
+        delete_company(company_id, database_path, role="admin")

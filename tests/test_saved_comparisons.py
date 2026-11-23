@@ -453,16 +453,16 @@ def test_delete_saved_comparison_other_user(test_database):
 
     comparison_id = get_saved_comparisons(user_id)[0][0]
 
-    other_user_id = user_id + 1
-
     with get_connection(database_path) as connection:
-        connection.execute(
+        cursor = connection.execute(
             """
             INSERT INTO user (username, email, password_hash)
             VALUES (?, ?, ?)
             """,
             ("outro_utilizador", "outro@example.com", "hash")
         )
+
+        other_user_id = cursor.lastrowid
 
     success = delete_saved_comparison(other_user_id, comparison_id)
 

@@ -15,3 +15,6 @@ __pycache__/
 data/*backup*.db
 data/*backup*.sqlite
 data/*backup*.sqlite3
+
+# Base de dados local da aplicação
+data/financial_analysis.db

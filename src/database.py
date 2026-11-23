@@ -141,6 +141,20 @@ def migrate_database(database_path=DATABASE_PATH):
             connection.execute("PRAGMA user_version = 4")
             version = 4
 
+        # Migração v4 -> v5
+        if version == 4:
+
+            connection.execute("""
+                ALTER TABLE user
+                ADD COLUMN role TEXT NOT NULL DEFAULT 'user'
+                CHECK(role IN ('admin', 'user'))
+            """)
+
+            connection.commit()
+
+            connection.execute("PRAGMA user_version = 5")
+            version = 5
+
 
 def initialize_database(database_path=DATABASE_PATH):
     """Cria as tabelas de aplicação, caso ainda não existam."""
@@ -191,6 +205,8 @@ def initialize_database(database_path=DATABASE_PATH):
                 username TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 email TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user'
+                    CHECK(role IN ('admin', 'user')),
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -243,7 +259,7 @@ def initialize_database(database_path=DATABASE_PATH):
             )
         """)
 
-    connection.execute("PRAGMA user_version = 4")
+    connection.execute("PRAGMA user_version = 5")
 
 
 if __name__ == "__main__":
