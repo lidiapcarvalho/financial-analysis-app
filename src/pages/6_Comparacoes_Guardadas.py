@@ -29,7 +29,7 @@ def confirm_delete_dialog(comparison_id):
 
 st.title("Comparações Guardadas")
 
-st.write("Consulte e gira as suas comparações financeiras guardadas.")
+st.write("Consulta e gere as tuas comparações financeiras guardadas.")
 
 comparisons = get_saved_comparisons(user_id)
 

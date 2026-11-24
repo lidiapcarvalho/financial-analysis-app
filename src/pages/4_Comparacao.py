@@ -427,7 +427,7 @@ else:
 
 st.divider()
 
-st.subheader("Evolução da Margem do Lucro Líquida")
+st.subheader("Evolução da Margem de Lucro Líquida")
 
 indicator_table = df.dropna(subset=["Net Profit Margin (%)"])
 
@@ -438,7 +438,7 @@ if not indicator_table.empty:
         y="Net Profit Margin (%)",
         color="Company",
         markers=True,
-        title="Evolução da Margem do Lucro Líquida por Empresa",
+        title="Evolução da Margem de Lucro Líquida por Empresa",
         labels={
             "Fiscal Year": "Ano Fiscal",
             "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
@@ -510,8 +510,6 @@ else:
     st.info("Não existem dados disponíveis para este indicador.")
 
 st.divider()
-
-st.subheader("Evolução do ROE")
 
 st.subheader("Evolução do ROE")
 

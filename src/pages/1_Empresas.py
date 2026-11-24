@@ -13,11 +13,8 @@ from src.database import initialize_database
 # Preparar a base de dados antes de iniciar a aplicação
 initialize_database()
 
-is_admin = (
-    st.session_state.get("user", {}).get("role") == "admin"
-)
-
 user_role = st.session_state.get("user", {}).get("role")
+is_admin = user_role == "admin"
 
 st.title("Gestão de Empresas")
 
