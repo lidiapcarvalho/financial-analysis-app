@@ -453,16 +453,16 @@ def test_delete_saved_comparison_other_user(test_database):
 
     comparison_id = get_saved_comparisons(user_id)[0][0]
 
-    other_user_id = user_id + 1
-
     with get_connection(database_path) as connection:
-        connection.execute(
+        cursor = connection.execute(
             """
             INSERT INTO user (username, email, password_hash)
             VALUES (?, ?, ?)
             """,
             ("outro_utilizador", "outro@example.com", "hash")
         )
+
+        other_user_id = cursor.lastrowid
 
     success = delete_saved_comparison(other_user_id, comparison_id)
 
@@ -497,3 +497,51 @@ def test_delete_saved_comparison_removes_fiscal_years(test_database):
         ).fetchall()
 
     assert periods == []
+
+
+def test_save_comparison_update_other_user(test_database):
+    database_path, user_id, company_ids, fiscal_years = test_database
+
+    # Cria um segundo utilizador
+    with get_connection(database_path) as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO user (username, email, password_hash)
+            VALUES (?, ?, ?)
+            """,
+            ("other_user", "other@example.com", "other_hash")
+        )
+        other_user_id = cursor.lastrowid
+
+    # Guarda uma comparação pertencente ao segundo utilizador
+    save_comparison(
+        other_user_id,
+        "Comparação original",
+        company_ids,
+        fiscal_years
+    )
+
+    comparison_id = get_saved_comparisons(other_user_id)[0][0]
+
+    # O primeiro utilizador tenta atualizar essa comparação
+    success, message = save_comparison(
+        user_id,
+        "Tentativa de alteração",
+        company_ids,
+        [2023],
+        notes="Tentativa de acesso indevido.",
+        comparison_id=comparison_id
+    )
+
+    assert success is False
+    assert message == "A comparação não existe ou não te pertence."
+
+    # Confirma que a comparação original não foi alterada
+    comparison = get_saved_comparison_details(
+        other_user_id,
+        comparison_id
+    )
+
+    assert comparison["name"] == "Comparação original"
+    assert comparison["notes"] is None
+    assert comparison["fiscal_years"] == fiscal_years

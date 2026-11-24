@@ -104,3 +104,38 @@ def create_user(username, email, password):
 
     except sqlite3.IntegrityError:
         return False, "Não foi possível registar o utilizador. Verifica os dados."
+
+
+def authenticate_user(username, password):
+    """Autentica um utilizador através das suas credenciais."""
+
+    username = username.strip()
+
+    if not username or not password:
+        return False, None
+
+    with get_connection() as connection:
+        user = connection.execute(
+            """
+            SELECT id, username, email, password_hash, role
+            FROM user
+            WHERE username = ?
+            LIMIT 1
+            """,
+            (username,)
+        ).fetchone()
+
+    if user is None:
+        return False, None
+
+    if not verify_password(password, user[3]):
+        return False, None
+
+    authenticated_user = {
+        "id": user[0],
+        "username": user[1],
+        "email": user[2],
+        "role": user[4]
+    }
+
+    return True, authenticated_user

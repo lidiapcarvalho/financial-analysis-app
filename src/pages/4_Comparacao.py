@@ -13,7 +13,7 @@ saved_comparison = st.session_state.get(
     "saved_comparison",
 )
 
-USER_ID = 4  # Temporário, até à implementação da autenticação
+user_id = st.session_state["user"]["id"]
 
 initialize_database()
 
@@ -427,7 +427,7 @@ else:
 
 st.divider()
 
-st.subheader("Evolução da Margem do Lucro Líquida")
+st.subheader("Evolução da Margem de Lucro Líquida")
 
 indicator_table = df.dropna(subset=["Net Profit Margin (%)"])
 
@@ -438,7 +438,7 @@ if not indicator_table.empty:
         y="Net Profit Margin (%)",
         color="Company",
         markers=True,
-        title="Evolução da Margem do Lucro Líquida por Empresa",
+        title="Evolução da Margem de Lucro Líquida por Empresa",
         labels={
             "Fiscal Year": "Ano Fiscal",
             "Net Profit Margin (%)": "Margem de Lucro Líquida (%)",
@@ -513,8 +513,6 @@ st.divider()
 
 st.subheader("Evolução do ROE")
 
-st.subheader("Evolução do ROE")
-
 indicator_table = df.dropna(subset=["ROE (%)"])
 
 if not indicator_table.empty:
@@ -569,7 +567,7 @@ with st.form("save_comparison_form"):
     if submitted:
 
         success, message = save_comparison(
-            USER_ID,
+            user_id,
             comparison_name,
             selected_company_ids,
             selected_fiscal_years,

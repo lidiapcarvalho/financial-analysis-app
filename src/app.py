@@ -11,50 +11,36 @@ st.set_page_config(
 
 initialize_database()
 
-pages = {
-    "Principal": [
-        st.Page(
-            "app_home.py",
-            title="Início",
-            icon="🏠",
-            default=True
-        )
-    ],
-    "Gestão Financeira": [
-        st.Page(
-            "pages/1_Empresas.py",
-            title="Empresas",
-            icon="🏢"
-        ),
-        st.Page(
-            "pages/2_Registos_Financeiros.py",
-            title="Registos Financeiros",
-            icon="📁"
-        ),
-        st.Page(
-            "pages/3_Analise_Financeira.py",
-            title="Análise Financeira",
-            icon="📊"
-        ),
-        st.Page(
-            "pages/4_Comparacao.py",
-            title="Comparação",
-            icon="⚖️"
-        )
-    ],
-    "Conta": [
-        st.Page(
-            "pages/5_Registo.py",
-            title="Registar Utilizador",
-            icon="👤"
-        ),
-        st.Page(
-            "pages/6_Comparacoes_Guardadas.py",
-            title="Comparações Guardadas",
-            icon="🔖"
-        )
-    ]
-}
+if (
+    st.session_state.get("authenticated", False)
+    and st.session_state.get("user") is not None
+):
+    pages = {
+        "Principal": [
+            st.Page("app_home.py", title="Início", icon="🏠", default=True)
+        ],
+        "Gestão Financeira": [
+            st.Page("pages/1_Empresas.py", title="Empresas", icon="🏢"),
+            st.Page("pages/2_Registos_Financeiros.py",
+                    title="Registos Financeiros", icon="📁"),
+            st.Page("pages/3_Analise_Financeira.py",
+                    title="Análise Financeira", icon="📊"),
+            st.Page("pages/4_Comparacao.py", title="Comparação", icon="⚖️")
+        ],
+        "Conta": [
+            st.Page("pages/6_Comparacoes_Guardadas.py",
+                    title="Comparações Guardadas", icon="🔖")
+        ]
+    }
+else:
+    pages = {
+        "Principal": [
+            st.Page("app_home.py", title="Início", icon="🏠", default=True)
+        ],
+        "Conta": [
+            st.Page("pages/5_Registo.py", title="Registar Utilizador", icon="👤")
+        ]
+    }
 
 navigation = st.navigation(pages)
 navigation.run()

@@ -101,8 +101,13 @@ def _validate_companies(records, company_ids):
         )
 
 
-def import_financial_data(database_path=None):
+def import_financial_data(database_path=None, *, role=None):
     """Importa os registos financeiros do Excel para a base de dados."""
+
+    if role != "admin":
+        raise PermissionError(
+            "Não tens permissões para executar esta operação."
+        )
 
     records = _read_financial_data()
 

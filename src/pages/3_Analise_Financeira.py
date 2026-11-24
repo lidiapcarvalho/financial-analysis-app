@@ -423,6 +423,6 @@ if df["Fiscal Year"].nunique() >= 2:
 else:
     st.info(
         "Não existem dados financeiros suficientes para "
-        "apresentr os gráficos de evolução. "
+        "apresentar os gráficos de evolução. "
         "São necessários, pelo menos, dois anos fiscais."
     )

@@ -187,12 +187,12 @@ def test_initialize_database_creates_missing_directory(tmp_path):
     assert database_path.exists()
 
 
-# Teste 7: Verifica se uma nova base de dados é criada na versão 4
+# Teste 7: Verifica se uma nova base de dados é criada na versão 5
 # e contém a coluna notes e a tabela comparison_period
 
-def test_new_database_has_version_4_and_comparison_period(tmp_path):
+def test_new_database_has_version_5_and_comparison_period(tmp_path):
 
-    database_path = tmp_path / "test_version_4.db"
+    database_path = tmp_path / "test_version_5.db"
     initialize_database(database_path)
 
     with get_connection(database_path) as connection:
@@ -215,7 +215,7 @@ def test_new_database_has_version_4_and_comparison_period(tmp_path):
             ).fetchall()
         ]
 
-    assert version == 4
+    assert version == 5
     assert "notes" in comparison_columns
     assert "comparison_id" in period_columns
     assert "fiscal_year" in period_columns
@@ -235,6 +235,16 @@ def test_migrate_database_v2_to_v3(tmp_path):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
                 sector TEXT NOT NULL
+            )
+        """)
+
+        connection.execute("""
+            CREATE TABLE user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -274,7 +284,7 @@ def test_migrate_database_v2_to_v3(tmp_path):
 
     assert period_table is not None
 
-    assert version == 4
+    assert version == 5
     assert "notes" in columns
 
 # Teste 9: Verifica as restrições da tabela comparison_period

@@ -37,7 +37,7 @@ def test_get_all_financial_records_returns_registered_records(tmp_path):
     database_path = tmp_path / "test_financial_records.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     with get_connection(database_path) as connection:
         connection.execute(
@@ -70,12 +70,12 @@ def test_add_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, 700.0, database_path
+        2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
     )
 
     financial_records = get_all_financial_records(database_path)
@@ -95,17 +95,17 @@ def test_update_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, 700.0, database_path
+        2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
     )
 
     update_financial_record(
         record_id, 2026, "2026-12-31", "EUR", "millions", 1200.0, 300.0, 180.0,
-        2200.0, 1300.0, 900.0, 800.0, database_path
+        2200.0, 1300.0, 900.0, 800.0, database_path, role="admin"
     )
 
     financial_records = get_all_financial_records(database_path)
@@ -126,16 +126,16 @@ def test_delete_financial_record(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury", database_path
+        "LVMH", "Luxury", database_path, role="admin"
     )
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, 700.0, database_path
+        2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
     )
 
     row_delected = delete_financial_record(
-        record_id, database_path
+        record_id, database_path, role="admin"
     )
 
     financial_records = get_all_financial_records(database_path)
@@ -250,12 +250,12 @@ def test_add_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     with pytest.raises(ValueError):
         add_financial_record(
             company_id, fiscal_year, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-            2000.0, 1200.0, 800.0, 700.0, database_path
+            2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
         )
 
     assert get_all_financial_records(database_path) == []
@@ -281,7 +281,7 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     financial_values = {
         "revenue": 1000.0,
@@ -310,6 +310,7 @@ def test_add_financial_record_invalid_financial_values(tmp_path, field_values):
             financial_values["equity"],
             financial_values["equity_attributable_to_owners"],
             database_path,
+            role="admin",
         )
 
     assert get_all_financial_records(database_path) == []
@@ -323,11 +324,11 @@ def test_add_financial_record_accepts_negative_values(tmp_path):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, -250.0, -150.0,
-        2000.0, 1200.0, -800.0, 700.0, database_path
+        2000.0, 1200.0, -800.0, 700.0, database_path, role="admin"
     )
 
     assert record_id is not None
@@ -351,17 +352,17 @@ def test_update_financial_record_invalid_fiscal_year(tmp_path, fiscal_year):
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, 700.0, database_path
+        2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
     )
 
     with pytest.raises(ValueError):
         update_financial_record(
             record_id, fiscal_year, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-            2000.0, 1200.0, 800.0, 700.0, database_path
+            2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
         )
 
     records = get_all_financial_records(database_path)
@@ -388,11 +389,11 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
     database_path = tmp_path / "test_financial_record.db"
     initialize_database(database_path)
 
-    company_id = add_company("LVMH", "Luxury", database_path)
+    company_id = add_company("LVMH", "Luxury", database_path, role="admin")
 
     record_id = add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 1000.0, 250.0, 150.0,
-        2000.0, 1200.0, 800.0, 700.0, database_path
+        2000.0, 1200.0, 800.0, 700.0, database_path, role="admin"
     )
 
     financial_values = {
@@ -422,6 +423,7 @@ def test_update_financial_record_invalid_financial_values(tmp_path, field_values
             financial_values["equity"],
             financial_values["equity_attributable_to_owners"],
             database_path,
+            role="admin",
         )
 
     records = get_all_financial_records(database_path)
@@ -438,12 +440,12 @@ def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury Goods", database_path
+        "LVMH", "Luxury Goods", database_path, role="admin"
     )
 
     add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 80000, 15000, 10000,
-        120000, 50000, 70000, 60000, database_path
+        120000, 50000, 70000, 60000, database_path, role="admin"
     )
 
     with pytest.raises(
@@ -452,7 +454,7 @@ def test_add_financial_record_rejects_duplicate_company_and_year(tmp_path):
     ):
         add_financial_record(
             company_id, 2025, "2025-12-31", "EUR", "millions", 90000, 16000, 11000,
-            130000, 55000, 75000, 65000, database_path
+            130000, 55000, 75000, 65000, database_path, role="admin"
         )
 
     records = get_all_financial_records(database_path)
@@ -466,17 +468,17 @@ def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
     initialize_database(database_path)
 
     company_id = add_company(
-        "LVMH", "Luxury Goods", database_path
+        "LVMH", "Luxury Goods", database_path, role="admin"
     )
 
     first_record_id = add_financial_record(
-        company_id, 2024, 2024-12-31, "EUR", "millions", 80000, 15000, 10000,
-        120000, 50000, 70000, 60000, database_path
+        company_id, 2024, "2024-12-31", "EUR", "millions", 80000, 15000, 10000,
+        120000, 50000, 70000, 60000, database_path, role="admin"
     )
 
     add_financial_record(
         company_id, 2025, "2025-12-31", "EUR", "millions", 90000, 16000, 11000,
-        130000, 55000, 75000, 65000, database_path
+        130000, 55000, 75000, 65000, database_path, role="admin"
     )
 
     with pytest.raises(
@@ -485,7 +487,7 @@ def test_update_financial_record_rejects_duplicate_company_and_year(tmp_path):
     ):
         update_financial_record(
             first_record_id, 2025, "2025-12-31", "EUR", "millions", 85000, 15500, 10500,
-            125000, 52000, 73000, 63000, database_path
+            125000, 52000, 73000, 63000, database_path, role="admin"
         )
 
     records = get_all_financial_records(database_path)
@@ -503,9 +505,9 @@ def test_get_financial_records_by_companies_returns_selected_records(tmp_path):
     database_path = tmp_path / "test_financial_records.db"
     initialize_database(database_path)
 
-    lvmh_id = add_company("LVMH", "Luxury", database_path)
-    kering_id = add_company("Kering", "Luxury", database_path)
-    add_company("Richemont", "Luxury", database_path)
+    lvmh_id = add_company("LVMH", "Luxury", database_path, role="admin")
+    kering_id = add_company("Kering", "Luxury", database_path, role="admin")
+    add_company("Richemont", "Luxury", database_path, role="admin")
 
     with get_connection(database_path) as connection:
         connection.executemany(
@@ -537,3 +539,141 @@ def test_get_financial_records_by_companies_returns_selected_records(tmp_path):
     assert {record[2] for record in financial_records} == {
         "LVMH", "Kering"
     }
+
+
+# Teste 17: Rejeição da criação de registos financeiros por utilizador normal
+
+def test_add_financial_record_rejects_normal_user(tmp_path):
+    """Testa que um utilizador normal não pode criar registos financeiros."""
+
+    database_path = tmp_path / "test_financial_record.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury", database_path, role="admin"
+    )
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        add_financial_record(
+            company_id,
+            2025,
+            "2025-12-31",
+            "EUR",
+            "millions",
+            1000.0,
+            250.0,
+            150.0,
+            2000.0,
+            1200.0,
+            800.0,
+            700.0,
+            database_path,
+            role="user"
+        )
+
+    assert get_all_financial_records(database_path) == []
+
+# Teste 18: Rejeição da atualização de registos financeiros por utilizador normal
+
+
+def test_update_financial_record_rejects_normal_user(tmp_path):
+    """Testa que um utilizador normal não pode atualizar registos financeiros."""
+
+    database_path = tmp_path / "test_financial_record.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury", database_path, role="admin"
+    )
+
+    record_id = add_financial_record(
+        company_id,
+        2025,
+        "2025-12-31",
+        "EUR",
+        "millions",
+        1000.0,
+        250.0,
+        150.0,
+        2000.0,
+        1200.0,
+        800.0,
+        700.0,
+        database_path,
+        role="admin"
+    )
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        update_financial_record(
+            record_id,
+            2025,
+            "2025-12-31",
+            "EUR",
+            "millions",
+            1500.0,
+            300.0,
+            200.0,
+            2500.0,
+            1400.0,
+            1100.0,
+            900.0,
+            database_path,
+            role="user"
+        )
+
+    records = get_all_financial_records(database_path)
+
+    assert len(records) == 1
+    assert records[0][7] == 250.0
+    assert records[0][8] == 150.0
+    assert records[0][11] == 800.0
+# Teste 19: Rejeição da eliminação de registos financeiros por utilizador normal
+
+
+def test_delete_financial_record_rejects_normal_user(tmp_path):
+    """Testa que um utilizador normal não pode eliminar registos financeiros."""
+
+    database_path = tmp_path / "test_financial_record.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH", "Luxury", database_path, role="admin"
+    )
+
+    record_id = add_financial_record(
+        company_id,
+        2025,
+        "2025-12-31",
+        "EUR",
+        "millions",
+        1000.0,
+        250.0,
+        150.0,
+        2000.0,
+        1200.0,
+        800.0,
+        700.0,
+        database_path,
+        role="admin"
+    )
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        delete_financial_record(
+            record_id,
+            database_path,
+            role="user"
+        )
+
+    records = get_all_financial_records(database_path)
+
+    assert len(records) == 1
+    assert records[0][0] == record_id
