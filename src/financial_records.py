@@ -4,6 +4,15 @@ import sqlite3
 from src.database import get_connection
 
 
+def _require_admin(role):
+    """Verifica se o utilizador tem permissões de administrador."""
+
+    if role != "admin":
+        raise PermissionError(
+            "Não tens permissões para executar esta operação."
+        )
+
+
 def get_all_financial_records(database_path=None):
     """Devolve todos os registos financeiros, incluindo os dadaos da empresa associada."""
 
@@ -103,20 +112,24 @@ def _validate_numeric_value(value, field_name):
 
 
 def add_financial_record(
-        company_id,
-        fiscal_year,
-        period_end,
-        currency,
-        unit,
-        revenue,
-        operating_income,
-        net_income,
-        total_assets,
-        total_liabilities,
-        equity,
-        equity_attributable_to_owners,
-        database_path=None):
+    company_id,
+    fiscal_year,
+    period_end,
+    currency,
+    unit,
+    revenue,
+    operating_income,
+    net_income,
+    total_assets,
+    total_liabilities,
+    equity,
+    equity_attributable_to_owners,
+    database_path=None, *, role=None
+):
     """Regista um novo registo financeiro associado a uma empresa."""
+
+    _require_admin(role)
+
     _validate_fiscal_year(fiscal_year)
 
     _validate_non_negative_value(revenue, "revenue")
@@ -169,9 +182,12 @@ def add_financial_record(
 def update_financial_record(
     record_id, fiscal_year, period_end, currency, unit, revenue, operating_income,
     net_income, total_assets, total_liabilities, equity, equity_attributable_to_owners,
-    database_path=None
+    database_path=None, *, role
 ):
     """Atualiza os dados deum registo financeiro existente."""
+
+    _require_admin(role)
+
     _validate_fiscal_year(fiscal_year)
 
     _validate_non_negative_value(revenue, "revenue")
@@ -215,8 +231,10 @@ def update_financial_record(
         return cursor.rowcount
 
 
-def delete_financial_record(record_id, database_path=None):
+def delete_financial_record(record_id, database_path=None, *, role=None):
     """Elimina um registo financeiro existente."""
+
+    _require_admin(role)
 
     with get_connection(database_path) as connection:
         cursor = connection.execute(

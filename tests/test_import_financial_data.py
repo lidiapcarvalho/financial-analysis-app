@@ -58,11 +58,11 @@ def test_import_financial_data_imports_all_records(tmp_path):
     database_path = tmp_path / "test.db"
     initialize_database(database_path)
 
-    add_company("LVMH", "Luxury", database_path)
-    add_company("Kering", "Luxury", database_path)
-    add_company("Richemont", "Luxury", database_path)
+    add_company("LVMH", "Luxury", database_path, role="admin")
+    add_company("Kering", "Luxury", database_path, role="admin")
+    add_company("Richemont", "Luxury", database_path, role="admin")
 
-    imported_count = import_financial_data(database_path)
+    imported_count = import_financial_data(database_path, role="admin")
 
     records = get_all_financial_records(database_path)
 
@@ -106,11 +106,11 @@ def test_import_financial_data_fails_if_company_is_unknown(tmp_path):
     database_path = tmp_path / "test.db"
     initialize_database(database_path)
 
-    add_company("LVMH", "Luxury", database_path)
-    add_company("Kering", "Luxury", database_path)
+    add_company("LVMH", "Luxury", database_path, role="admin")
+    add_company("Kering", "Luxury", database_path, role="admin")
 
     with pytest.raises(ValueError, match="RICHEMONT"):
-        import_financial_data(database_path)
+        import_financial_data(database_path, role="admin")
 
     records = get_all_financial_records(database_path)
 
@@ -121,16 +121,16 @@ def test_import_financial_data_prevents_duplicate_imports(tmp_path):
     database_path = tmp_path / "test.db"
     initialize_database(database_path)
 
-    add_company("LVMH", "Luxury", database_path)
-    add_company("Kering", "Luxury", database_path)
-    add_company("Richemont", "Luxury", database_path)
+    add_company("LVMH", "Luxury", database_path, role="admin")
+    add_company("Kering", "Luxury", database_path, role="admin")
+    add_company("Richemont", "Luxury", database_path, role="admin")
 
-    first_import_count = import_financial_data(database_path)
+    first_import_count = import_financial_data(database_path, role="admin")
 
     assert first_import_count == 19
 
     with pytest.raises(sqlite3.IntegrityError):
-        import_financial_data(database_path)
+        import_financial_data(database_path, role="admin")
 
     records = get_all_financial_records(database_path)
 

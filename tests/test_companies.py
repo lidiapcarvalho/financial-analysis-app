@@ -256,3 +256,93 @@ def test_delete_company_with_financial_records(tmp_path):
         match="Não é possível eliminar uma empresa com registos financeiros associados."
     ):
         delete_company(company_id, database_path, role="admin")
+
+# Teste 12: Impedir que um utilizador normal registe empresas
+
+
+def test_add_company_rejects_normal_user(tmp_path):
+    """Verifica que apenas administradores podem registar empresas."""
+
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        add_company(
+            "LVMH",
+            "Luxury",
+            database_path,
+            role="user"
+        )
+
+    companies = get_all_companies(database_path)
+
+    assert companies == []
+
+# Teste 13: Impedir que um utilizador normal atualize empresas
+
+
+def test_update_company_rejects_normal_user(tmp_path):
+    """Verifica que apenas administradores podem atualizar empresas."""
+
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH",
+        "Luxury",
+        database_path,
+        role="admin"
+    )
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        update_company(
+            company_id,
+            "Kering",
+            "Luxury",
+            database_path,
+            role="user"
+        )
+
+    companies = get_all_companies(database_path)
+
+    assert companies == [
+        (company_id, "LVMH", "Luxury")
+    ]
+
+# Teste 14: Impedir que um utilizador normal elimine empresas
+
+
+def test_delete_company_rejects_normal_user(tmp_path):
+    """Verifica que apenas administradores podem eliminar empresas."""
+
+    database_path = tmp_path / "test.db"
+    initialize_database(database_path)
+
+    company_id = add_company(
+        "LVMH",
+        "Luxury",
+        database_path,
+        role="admin"
+    )
+
+    with pytest.raises(
+        PermissionError,
+        match="Não tens permissões para executar esta operação."
+    ):
+        delete_company(
+            company_id,
+            database_path,
+            role="user"
+        )
+
+    companies = get_all_companies(database_path)
+
+    assert companies == [
+        (company_id, "LVMH", "Luxury")
+    ]
