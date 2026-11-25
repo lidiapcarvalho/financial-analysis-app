@@ -11,10 +11,7 @@ __pycache__/
 # Segredos e configurações locais
 .env
 
-# Bases de dados de cópia de segurança
-data/*backup*.db
-data/*backup*.sqlite
-data/*backup*.sqlite3
-
-# Base de dados local da aplicação
-data/financial_analysis.db
+# Bases de dados locais e cópias de segurança
+data/*.db
+data/*.sqlite
+data/*.sqlite3
