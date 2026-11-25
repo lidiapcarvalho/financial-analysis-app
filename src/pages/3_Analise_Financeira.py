@@ -30,9 +30,33 @@ company_options = {
     for company in companies
 }
 
+# Recupera a seleção guardada
+if (
+    "selected_company" not in st.session_state
+    or st.session_state["selected_company"] not in company_options
+):
+    st.session_state["selected_company"] = next(iter(company_options))
+
+# Inicializa o estado do widget
+if "_selected_company" not in st.session_state:
+    st.session_state["_selected_company"] = (
+        st.session_state["selected_company"]
+    )
+
+# Atualiza o estado persistente quando a seleção muda
+
+
+def update_selected_company():
+    st.session_state["selected_company"] = (
+        st.session_state["_selected_company"]
+    )
+
+
 selected_company = st.selectbox(
     "Seleciona uma empresa:",
-    options=list(company_options.keys())
+    options=list(company_options.keys()),
+    key="_selected_company",
+    on_change=update_selected_company
 )
 
 selected_company_id = company_options[selected_company]
