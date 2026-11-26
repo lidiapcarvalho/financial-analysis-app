@@ -2,6 +2,8 @@ import streamlit as st
 
 from src.database import initialize_database
 from src.users import authenticate_user
+from src.companies import get_all_companies
+from src.financial_records import get_all_financial_records
 
 # Configuração da aplicação
 st.set_page_config(
@@ -13,6 +15,10 @@ st.set_page_config(
 # Preparar a base de dados
 initialize_database()
 
+# Consultar dados para o painel de controlo
+companies = get_all_companies()
+financial_records = get_all_financial_records()
+
 # Página inicial
 st.title("Financial Analysis App")
 
@@ -22,21 +28,109 @@ st.write(
 
 st.divider()
 
-st.subheader("Bem-vindo!")
+st.subheader("Visão Geral")
 
-st.markdown(
-    """
-    Esta aplicação permite:
+# Estatísticas gerais
+total_companies = len(companies)
+total_financial_records = len(financial_records)
 
-    - Gerir empresas e os respetivos registos financeiros.
-    - Consultar e analisar indicadores financeiros.
-    - Acompanhar a evolução do desempenho financeiro.
-    - Comparar o desempenho de diferentes empresas.
-    """
-)
+companies_with_records = {
+    record[1]
+    for record in financial_records
+}
+
+total_companies_with_records = len(companies_with_records)
+
+if financial_records:
+    latest_fiscal_year = max(
+        record[2]
+        for record in financial_records
+    )
+else:
+    latest_fiscal_year = None
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric("Empresas", total_companies)
+
+with col2:
+    st.metric("Registos Financeiros", total_financial_records)
+
+with col3:
+    st.metric("Empresas com Dados", total_companies_with_records)
+
+with col4:
+    st.metric(
+        "Ano Fiscal Mais Recente",
+        latest_fiscal_year if latest_fiscal_year is not None else "N/A"
+    )
+
+if not companies:
+    st.info(
+        "Ainda não existem empresas registadas na aplicação."
+    )
+
+if not financial_records:
+    st.info(
+        "Ainda não existem registos financeiros disponíveis."
+    )
 
 st.divider()
 
+st.subheader("Acessos Rápidos")
+
+if st.session_state.get("authenticated", False):
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.page_link(
+            "pages/1_Empresas.py",
+            label="Empresas",
+            icon="🏢"
+        )
+
+        st.page_link(
+            "pages/2_Registos_Financeiros.py",
+            label="Registos Financeiros",
+            icon="📁"
+        )
+
+    with col2:
+        st.page_link(
+            "pages/3_Analise_Financeira.py",
+            label="Análise Financeira",
+            icon="📊"
+        )
+
+        st.page_link(
+            "pages/4_Comparacao.py",
+            label="Comparação",
+            icon="⚖️"
+        )
+
+    with col3:
+        st.page_link(
+            "pages/6_Comparacoes_Guardadas.py",
+            label="Comparações Guardadas",
+            icon="🔖"
+        )
+
+else:
+
+    st.page_link(
+        "pages/5_Registo.py",
+        label="Registar Utilizador",
+        icon="👤"
+    )
+
+    st.info(
+        "Inicia sessão através do formulário abaixo "
+        "para aceder às funcionalidades de gestão financeira."
+    )
+
+st.divider()
 
 # Autenticação do utilizador
 
