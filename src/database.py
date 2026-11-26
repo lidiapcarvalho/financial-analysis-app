@@ -1,10 +1,14 @@
 import sqlite3
+import shutil
 from pathlib import Path
 
 # Caminho da base de dados
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATABASE_PATH = PROJECT_DIR / "data" / "financial_analysis.db"
+DEMO_DATABASE_PATH = (
+    PROJECT_DIR / "docs" / "database" / "financial_analysis_demo.db"
+)
 
 
 def get_connection(database_path=DATABASE_PATH):
@@ -157,11 +161,19 @@ def migrate_database(database_path=DATABASE_PATH):
 
 
 def initialize_database(database_path=DATABASE_PATH):
-    """Cria as tabelas de aplicação, caso ainda não existam."""
+    """Cria ou prepara a base de dados da aplicação."""
+
+    database_path = Path(database_path)
 
     # Garante que a pasta da base de dados existe
-    database_path = Path(database_path)
     database_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Cria a base de dados local a partir da demonstração,
+    # caso ainda não exista
+    if not database_path.exists():
+        if database_path.resolve() == DATABASE_PATH.resolve():
+            if DEMO_DATABASE_PATH.exists():
+                shutil.copy2(DEMO_DATABASE_PATH, database_path)
 
     # Atualiza a estrutura da base de dados, se necessário
     migrate_database(database_path)
@@ -259,7 +271,7 @@ def initialize_database(database_path=DATABASE_PATH):
             )
         """)
 
-    connection.execute("PRAGMA user_version = 5")
+        connection.execute("PRAGMA user_version = 5")
 
 
 if __name__ == "__main__":

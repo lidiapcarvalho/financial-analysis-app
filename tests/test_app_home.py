@@ -43,7 +43,7 @@ def test_login_and_logout(monkeypatch):
         )
     )
 
-    app = AppTest.from_file("../src/app_home.py").run()
+    app = AppTest.from_file("../src/app_home.py").run(timeout=10)
 
     # Preenche as credenciais
     app.text_input[0].set_value("test_user")
