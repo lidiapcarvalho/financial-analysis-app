@@ -22,6 +22,10 @@ O projeto pretende facilitar a consulta, interpretação e comparação de infor
 - Consulta e listagem de empresas.
 - Edição e eliminação de empresas, respeitando as regras de integridade da base de dados.
 - Validação dos dados introduzidos através da interface.
+- Registo e autenticação de utilizadores.
+- Gestão de perfis de utilizador, com distinção entre administradores e utilizadores normais.
+- Consulta e gestão de registos financeiros.
+- Importação de dados financeiros a partir de ficheiros Excel através do módulo `import_financial_data.py`.
 - Análise financeira individual por empresa e exercício fiscal.
 - Cálculo de indicadores financeiros:
     - Margem Operacional (Operating Margin);
@@ -31,47 +35,109 @@ O projeto pretende facilitar a consulta, interpretação e comparação de infor
     - Rendibilidade do Capital Próprio (ROE).
 - Apresentação de dados financeiros através de tabelas.
 - Representação gráfica da evolução dos indicadores financeiros.
-- Comparação dos indicadores financeiros entre empresas, por exercício fiscal.
+- Comparação dos indicadores financeiros entre empresas e exercícios fiscais.
+- Guardar, consultar e eliminar comparações financeiras.
+- Associação das comparações guardadas ao respetivo utilizador.
 - Testes automatizados das principais funcionalidades.
 
-### 📋 Previstas
+### 📋 Melhorias Futuras
 
-- Importação de dados financeiros a partir de ficheiros CSV e Excel através da Interface.
-- Gestão de utilizadores e autenticação.
-- Guardar, consultar e eliminar comparações financeiras.
 - Melhorias na apresentação e validação dos resultados comparativos.
+- Possibilidade de alargar a aplicação a outras empresas e setores de atividade.
+- Eventual suporte para outras fontes e formatos de importação de dados.
 
-## 🏢 4. Âmbito Inicial
+## 🖥️ 4. Demonstração da Aplicação
 
-A primeira versão centra-se em trÊs empresas do setor de artigos de luxo:
+### 4.1. Página Inicial
+
+A página inicial apresenta uma visão geral da aplicação e permite aceder às principais funcionalidades.
+
+![Página Inicial](docs/images/dashboard.png)
+
+### 4.2. Gestão de Empresas
+
+Permite consultar, adicionar, editar e eliminar empresas.
+
+![Gestão de Empresas](docs/images/companies.png)
+
+### 4.3. Registos Financeiros
+
+Permite consultar e gerir os registos financeiros das empresas.
+
+![Registos Financeiros](docs/images/financial-records.png)
+
+### 4.4. Análise Financeira
+
+Apresenta os indicadores financeiros de uma empresa e a respetiva evolução ao longo dos exercícios fiscais.
+
+![Análise Financeira](docs/images/financial-analysis.png)
+
+### 4.5. Comparação Financeira
+
+Permite comparar os indicadores financeiros de diferentes empresas e exercícios fiscais.
+
+![Comparação Financeira 1](docs/images/company-comparison-1.png)
+
+![Comparação Financeira 2](docs/images/company-comparison-2.png)
+
+### 4.6. Comparações Guardadas
+
+Permite consultar e eliminar comparações previamente guardadas pelo utilizador autenticado.
+
+![Comparações Guardadas](docs/images/saved-comparisons.png)
+
+### 4.7. Registo de Utilizadores
+
+A aplicação disponibiliza uma funcionalidade de registo para criação de novas contas de utilizador.
+
+![Registo de Utilizadores](docs/images/user-registration.png)
+
+### 4.8. Autenticação
+
+A página de autenticação permite aos utilizadores aceder à aplicação através das suas credenciais.
+
+![Dashboard da aplicação](docs/images/login.png)
+
+## 🏢 4. Âmbito do Projeto
+
+A aplicação foi inicialmente desenvolvida com o foco em três empresas do setor de artigos de luxo:
 - LVMH
 - Kering
 - Richemont
 
-O projeto poderá ser alargado futuramente a outras empresas e funcionalidades.
+Estas empresas constituem o conjunto principal de dados utilizado na análise e comparação fnanceira.
+
+A base de dados inclui também a Prada, registada para efeitos de testes e validação de funcionalidades, sem registos financeiros associados.
+
+O projeto foi concebido para permitir a inclusão futura de outras empresas e setores de atividade.
 
 ## 🛠️ 5. Tecnologias
 
 - **Linguagem de Programação:** Python
-- **Interface web:** Streamlit
+- **Interface Web:** Streamlit
 - **Análise e manipulação de dados:** Pandas
 - **Visualização de dados:** Plotly
 - **Base de Dados:** SQLite
 - **Importação e leitura de ficheiros Excel:** OpenPyXL
+- **Hashing seguro de palavra-passe:** Argon2 (`argon2-cffi`)
 - **Testes automatizados:** Pytest
 - **Controlo de versões:** Git e GitHub
 
-Outras tecnologias poderão ser acrescentadas durante o desenvolvimento, de acordo com as necessidades da aplicação.
+As dependências Python econtram-se identificadas no ficheiro `requirements.txt`.
 
 ## 📂 6. Estrutura do Projeto
 
 ```
 financial-analysis-app/
+├── .streamlit/
+│   └── config.toml
 ├── data/
 │   └── processed/
+│       └── financial-data.xlsx
 ├── docs/
 │   ├── database/
 │   ├── diagrams/
+│   ├── images/
 │   ├── learning-notes/
 │   ├── planning/
 │   └── reports/
@@ -80,7 +146,10 @@ financial-analysis-app/
 │   │   ├── 1_Empresas.py
 │   │   ├── 2_Registos_Financeiros.py
 │   │   ├── 3_Analise_Financeira.py
-│   │   └── 4_Comparacao.py
+│   │   ├── 4_Comparacao.py
+│   │   ├── 5_Registo.py
+│   │   └── 6_Comparacoes_Guardadas.py
+│   ├── __init__.py
 │   ├── app.py
 │   ├── app_home.py
 │   ├── companies.py
@@ -88,25 +157,33 @@ financial-analysis-app/
 │   ├── financial_indicators.py
 │   ├── financial_records.py
 │   ├── import_financial_data.py
-│   └── __init__.py
+│   ├── saved_comparisons.py
+│   └── users.py
 ├── tests/
+│   ├── test_app_home.py
 │   ├── test_companies.py
 │   ├── test_database.py
+│   ├── test_financial_analysis.py
 │   ├── test_financial_indicators.py
 │   ├── test_financial_records.py
-│   └── test_import_financial_data.py
+│   ├── test_import_financial_data.py
+│   ├── test_saved_comparisons.py
+│   └── test_users.py
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
-- data/ - ficheiros com dados financeiros utilizados no projeto.
-- docs/ - documentação técnica, diagramas, notas de aprendizagem, planeamento e relatórios.
-- src/ - código-fonte e lógica da aplicaçáo.
-- src/pages/ - páginas da interface Streamlit.
-- tests/ - testes automatizados das funcionalidades e dos módulos da aplicação.
-- requirements.txt - dependências Python do projeto.
-- README.md - documentação principal do repositório.
-- .gitignore - ficheiros e pasta que não deve ser incluídas no controlo de versões.
+**Descrição das pastas e ficheiros principais**
+
+- data/ — ficheiros com os dados financeiros utilizados no projeto.
+- docs/ — documentação técnica, diagramas, notas de aprendizagem, planeamento e relatórios.
+- src/ — código-fonte e lógica da aplicação.
+- src/pages/ — páginas da interface desenvolvida em Streamlit.
+- tests/ — testes automatizados dos módulos e funcionalidades da aplicação.
+- .streamlit/ — configuração da interface Streamlit.
+- requirements.txt — dependências Python do projeto.
+- README.md — documentação principal do repositório.
+- .gitignore — ficheiros e pastas excluídos do controlo de versões.
 
 ## 🚀 7. Instalação e Execução
 
@@ -150,13 +227,13 @@ python -m pip install -r requirements.txt
 python -m streamlit run src/app.py
 ```
 
-A aplicação ficará disponível no endereço local apresentado pelo Streamlit no terminal.
+Após a execução, a aplicação ficará disponível no endereço local apresentado pelo Streamlit no terminal, normalmente `http://localhost:8501`.
 
 ## 🧪 8. Testes
 
-O projeto utiliza Pytest para a execução de testes automatizados.
+O projeto utiliza **Pytest** para a execução de testes automatizados, permitindo verificar o funcionamento dos módulos e das principais funcionalidades da aplicação.
 
-Para executar os testes automatizados, utilizar:
+Para executar todos os testes, utilizar o seguinte comando na pasta principal do projeto:
 
 ```powershell
 python -m pytest
@@ -164,15 +241,19 @@ python -m pytest
 
 ## 🔀 9. Controlo de Versões
 
-O projeto utiliza Git e GitHub para controlo de versões e organização do desenvolvimento.
+O projeto utiliza **Git e GitHub** para controlo de versões e organização do desenvolvimento.
 - `main`: branch principal, destinada a manter a versão estável e integrada da aplicação.
 - **Branches de funcionalidades:** utilizadas para desenvolver novas funcionalidades e correções de forma isolada.
 - **Pull Requests:** utilizadas para rever e integrar as alterações na branch principal.
+
+Este fluxo de trabalho permite organizar o desenvolvimento, acompanhar as alterações e manter o histórico de evolução do projeto.
 
 ## 📊 10. Estado do Projeto
 
 **Fase atual:** desenvolvimento e consolidação das funcionalidades da aplicação.
 
-Encontram-se implementadas as funcionalidades de gestão de empresas e registos financeiros, análise financeira individual, cálculo de indicadores, representação gráfica e comparação financeira entre empresas.
+A aplicação já inclui gestão de empresas e registos financeiros, autenticação e gestão de utilizadores, análise financeira individual, cálculo de indicadores, representação gráfica, comparação financeira entre empresas e gestão de comparações guardadas.
 
-O projeto continua em desenvolvimento, estando previstas melhorias na importação de dados, na gestão de utilizadores e na funcionalidade de comparações guardadas.
+A base de dados utiliza SQLite e inclui mecanismos de migração para acompanhar a evolução da sua estrutura.
+
+O projeto encontra-se numa fase de consolidação e preparação da documentação final, estando previstas futuras melhorias na interface, no suporte a outras fontes e formatos de importação de dados e na possibilidade de alargar a análise a outras empresas e setores de atividade.
